@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>应急医疗物资库存与领用登记</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <style>
+        .container {padding: 15px;}
+        .form-item {margin-bottom: 15px;}
+        .form-label {display: inline-block; width: 100px; text-align: right; margin-right: 10px; vertical-align: middle;}
+        .form-content {display: inline-block; vertical-align: middle;}
+        .required {color: red; margin-right: 5px;}
+        .section-box {margin: 20px 0; padding: 15px; border: 1px solid #eee; border-radius: 4px; background-color: #fafafa;}
+        .section-title {font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #1E9FFF; padding-bottom: 10px; border-bottom: 1px solid #eee;}
+        .btn-group {margin: 15px 0;}
+        .warning {color: #ff4d4f; font-weight: bold;}
+        .table-container {margin-top: 10px;}
+        
+        /* 弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-box {
+            width: 450px;
+            background: #fff;
+            border-radius: 4px;
+            padding: 15px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-title {font-weight: bold;}
+        .modal-close {cursor: pointer;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>应急医疗物资库存与领用登记</legend>
+        <div class="layui-field-box">
+            <!-- 库存管理区域 -->
+            <div class="section-box">
+                <div class="section-title"><i class="layui-icon layui-icon-cubes"></i> 库存管理</div>
+                
+                <div class="btn-group">
+                    <button class="layui-btn layui-btn-normal" id="setWarningBtn" disabled><i class="layui-icon layui-icon-bell"></i> 设置预警值</button>
+                    <button class="layui-btn" id="stockInBtn"><i class="layui-icon layui-icon-download-circle"></i> 入库登记</button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="layui-table" lay-size="sm">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">选</th>
+                                <th>物资名称</th>
+                                <th>规格</th>
+                                <th>库存数量</th>
+                                <th>预警值</th>
+                                <th>有效期至</th>
+                                <th>供应商</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suppliesList">
+                            <tr>
+                                <td><input type="radio" name="supply" lay-skin="primary" data-id="1"></td>
+                                <td>医用外科口罩</td>
+                                <td>50只/盒</td>
+                                <td class="warning">15盒</td>
+                                <td>20盒</td>
+                                <td>2026-05-10</td>
+                                <td>康泰医疗用品公司</td>
+                            </tr>
+                            <tr>
+                                <td><input type="radio" name="supply" lay-skin="primary" data-id="2"></td>
+                                <td>一次性手套</td>
+                                <td>100只/盒</td>
+                                <td>35盒</td>
+                                <td>25盒</td>
+                                <td>2026-08-20</td>
+                                <td>恒安防护用品厂</td>
+                            </tr>
+                            <tr>
+                                <td><input type="radio" name="supply" lay-skin="primary" data-id="3"></td>
+                                <td>碘伏消毒液</td>
+                                <td>100ml/瓶</td>
+                                <td>28瓶</td>
+                                <td>15瓶</td>
+                                <td>2025-12-30</td>
+                                <td>华康消毒制品公司</td>
+                            </tr>
+                            <tr>
+                                <td><input type="radio" name="supply" lay-skin="primary" data-id="4"></td>
+                                <td>止血带</td>
+                                <td>50条/包</td>
+                                <td class="warning">8包</td>
+                                <td>10包</td>
+                                <td>2027-03-15</td>
+                                <td>医疗器械供应站</td>
+                            </tr>
+                            <tr>
+                                <td><input type="radio" name="supply" lay-skin="primary" data-id="5"></td>
+                                <td>医用纱布</td>
+                                <td>10片/包</td>
+                                <td>42包</td>
+                                <td>20包</td>
+                                <td>2026-09-05</td>
+                                <td>康泰医疗用品公司</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 领用登记区域 -->
+            <div class="section-box">
+                <div class="section-title"><i class="layui-icon layui-icon-clipboard"></i> 领用登记</div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>领用人员</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="recipient" style="width: 200px;">
+                            <option value="">请选择</option>
+                            <option value="1">张医生</option>
+                            <option value="2">李护士</option>
+                            <option value="3">王社区工作者</option>
+                            <option value="4">赵志愿者</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>物资选择</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="selectedSupply" style="width: 250px;">
+                            <option value="">请选择</option>
+                            <option value="1">医用外科口罩（15盒）</option>
+                            <option value="2">一次性手套（35盒）</option>
+                            <option value="3">碘伏消毒液（28瓶）</option>
+                            <option value="4">止血带（8包）</option>
+                            <option value="5">医用纱布（42包）</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>领用数量</label>
+                    <div class="form-content">
+                        <input type="number" class="layui-input" id="quantity" style="width: 150px;" min="1" placeholder="请输入数量">
+                        <span id="stockHint" style="margin-left: 10px; color: #666;">当前最大可领：--</span>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>领用原因</label>
+                    <div class="form-content">
+                        <textarea class="layui-textarea" id="reason" style="width: 400px; height: 100px;" placeholder="请填写领用原因"></textarea>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="layui-btn" id="confirmReceiveBtn"><i class="layui-icon layui-icon-check"></i> 确认领用</button>
+                </div>
+            </div>
+
+            <!-- 底部操作按钮 -->
+            <div class="btn-group" style="text-align: center; margin-top: 10px;">
+                <button class="layui-btn layui-btn-primary" id="stockCheckBtn"><i class="layui-icon layui-icon-refresh"></i> 库存盘点</button>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<!-- 设置预警值弹窗 -->
+<div class="modal" id="warningModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title">设置预警值</div>
+            <div class="modal-close" id="warningClose">&times;</div>
+        </div>
+        <div>
+            <form class="layui-form">
+                <input type="hidden" id="warningSupplyId">
+                
+                <div class="form-item">
+                    <label class="form-label">物资名称</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="warningSupplyName" style="width: 250px;" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>当前预警值</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="currentWarningValue" style="width: 150px;" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>新预警值</label>
+                    <div class="form-content">
+                        <input type="number" class="layui-input" id="newWarningValue" style="width: 150px;" min="1" placeholder="请输入新预警值">
+                    </div>
+                </div>
+                
+                <div class="btn-group" style="text-align: center; margin-top: 15px;">
+                    <button class="layui-btn" id="saveWarningBtn">保存</button>
+                    <button type="button" class="layui-btn layui-btn-primary" id="cancelWarningBtn">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 入库登记弹窗 -->
+<div class="modal" id="stockInModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title">入库登记</div>
+            <div class="modal-close" id="stockInClose">&times;</div>
+        </div>
+        <div>
+            <form class="layui-form">
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>物资选择</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="stockInSupply" style="width: 250px;">
+                            <option value="">请选择</option>
+                            <option value="1">医用外科口罩</option>
+                            <option value="2">一次性手套</option>
+                            <option value="3">碘伏消毒液</option>
+                            <option value="4">止血带</option>
+                            <option value="5">医用纱布</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>入库数量</label>
+                    <div class="form-content">
+                        <input type="number" class="layui-input" id="stockInQuantity" style="width: 150px;" min="1" placeholder="请输入数量">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>有效期至</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="expiryDate" style="width: 200px;" placeholder="选择有效期">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>供应商</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="supplier" style="width: 250px;" placeholder="输入供应商名称">
+                    </div>
+                </div>
+                
+                <div class="btn-group" style="text-align: center; margin-top: 15px;">
+                    <button class="layui-btn" id="confirmStockInBtn">确认入库</button>
+                    <button type="button" class="layui-btn layui-btn-primary" id="cancelStockInBtn">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 库存盘点弹窗 -->
+<div class="modal" id="stockCheckModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title">库存盘点</div>
+            <div class="modal-close" id="stockCheckClose">&times;</div>
+        </div>
+        <div>
+            <form class="layui-form">
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>盘点日期</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="checkDate" style="width: 200px;" placeholder="选择盘点日期">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>物资选择</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="checkSupply" style="width: 250px;">
+                            <option value="">请选择</option>
+                            <option value="1">医用外科口罩</option>
+                            <option value="2">一次性手套</option>
+                            <option value="3">碘伏消毒液</option>
+                            <option value="4">止血带</option>
+                            <option value="5">医用纱布</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>系统库存</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="systemStock" style="width: 150px;" readonly placeholder="系统记录数量">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>实际库存</label>
+                    <div class="form-content">
+                        <input type="number" class="layui-input" id="actualStock" style="width: 150px;" min="0" placeholder="实际盘点数量">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">差异原因</label>
+                    <div class="form-content">
+                        <textarea class="layui-textarea" id="differenceReason" style="width: 300px; height: 100px;" placeholder="如有差异，请填写原因"></textarea>
+                    </div>
+                </div>
+                
+                <div class="btn-group" style="text-align: center; margin-top: 15px;">
+                    <button class="layui-btn" id="confirmCheckBtn">确认盘点</button>
+                    <button type="button" class="layui-btn layui-btn-primary" id="cancelCheckBtn">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    layui.use(['form', 'laydate', 'layer'], function() {
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+        var currentSupplyId = null; // 当前选中的物资ID
+        
+        // 辅助函数
+        function $(id) { return document.getElementById(id); }
+        
+        // 刷新按钮状态
+        function refreshBtnStatus() {
+            var checked = document.querySelector('input[name="supply"]:checked');
+            var setWarningBtn = $('setWarningBtn');
+            
+            if (checked) {
+                currentSupplyId = checked.getAttribute('data-id');
+                setWarningBtn.disabled = false;
+            } else {
+                currentSupplyId = null;
+                setWarningBtn.disabled = true;
+            }
+        }
+        
+        // 初始化日期选择器
+        laydate.render({elem: 'expiryDate', type: 'date'});
+        laydate.render({elem: 'checkDate', type: 'date', value: new Date()});
+        
+        // 单选框事件
+        document.querySelectorAll('input[name="supply"]').forEach(radio => {
+            radio.addEventListener('change', refreshBtnStatus);
+        });
+        
+        // 物资选择变化时更新最大可领数量
+        $('selectedSupply').addEventListener('change', function() {
+            var stockHint = $('stockHint');
+            var quantityInput = $('quantity');
+            
+            if (!this.value) {
+                stockHint.textContent = '当前最大可领：--';
+                quantityInput.value = '';
+                return;
+            }
+            
+            // 从选项文本中提取库存数量
+            var text = this.options[this.selectedIndex].text;
+            var stockMatch = text.match(/\((\d+)\D+\)/);
+            
+            if (stockMatch && stockMatch[1]) {
+                var maxQuantity = parseInt(stockMatch[1]);
+                stockHint.textContent = `当前最大可领：${maxQuantity}`;
+                quantityInput.max = maxQuantity;
+            }
+        });
+        
+        // 设置预警值按钮点击事件
+        $('setWarningBtn').addEventListener('click', function() {
+            if (!currentSupplyId) return;
+            
+            var row = document.querySelector(`input[name="supply"][data-id="${currentSupplyId}"]`).closest('tr');
+            var cells = row.cells;
+            
+            // 填充表单
+            $('warningSupplyId').value = currentSupplyId;
+            $('warningSupplyName').value = cells[1].textContent;
+            $('currentWarningValue').value = cells[4].textContent;
+            $('newWarningValue').value = cells[4].textContent;
+            
+            // 显示弹窗
+            $('warningModal').style.display = 'flex';
+        });
+        
+        // 保存预警值按钮点击事件
+        $('saveWarningBtn').addEventListener('click', function() {
+            var supplyId = $('warningSupplyId').value;
+            var newWarningValue = $('newWarningValue').value;
+            
+            if (!newWarningValue || newWarningValue < 1) {
+                layer.msg('请输入有效的预警值', {icon: 2});
+                return;
+            }
+            
+            // 更新表格数据
+            var row = document.querySelector(`input[name="supply"][data-id="${supplyId}"]`).closest('tr');
+            row.cells[4].textContent = newWarningValue;
+            
+            // 检查是否需要标红（库存低于预警值）
+            var stockCell = row.cells[3];
+            var stock = parseInt(stockCell.textContent);
+            var warning = parseInt(newWarningValue);
+            
+            if (stock < warning) {
+                stockCell.classList.add('warning');
+            } else {
+                stockCell.classList.remove('warning');
+            }
+            
+            // 关闭弹窗并提示
+            $('warningModal').style.display = 'none';
+            layer.msg('预警值设置成功', {icon: 1});
+        });
+        
+        // 入库登记按钮点击事件
+        $('stockInBtn').addEventListener('click', function() {
+            $('stockInModal').style.display = 'flex';
+        });
+        
+        // 确认入库按钮点击事件
+        $('confirmStockInBtn').addEventListener('click', function() {
+            var supplyId = $('stockInSupply').value;
+            var quantity = $('stockInQuantity').value;
+            var expiryDate = $('expiryDate').value;
+            var supplier = $('supplier').value;
+            
+            if (!supplyId || !quantity || !expiryDate || !supplier) {
+                layer.msg('请填写完整的入库信息', {icon: 2});
+                return;
+            }
+            
+            // 关闭弹窗并提示
+            $('stockInModal').style.display = 'none';
+            layer.msg('入库登记成功', {icon: 1});
+            
+            // 实际应用中这里会更新库存数据
+        });
+        
+        // 确认领用按钮点击事件
+        $('confirmReceiveBtn').addEventListener('click', function() {
+            var recipient = $('recipient').value;
+            var supplyId = $('selectedSupply').value;
+            var quantity = $('quantity').value;
+            var reason = $('reason').value;
+            
+            if (!recipient || !supplyId || !quantity || !reason) {
+                layer.msg('请填写完整的领用信息', {icon: 2});
+                return;
+            }
+            
+            // 获取最大可领数量
+            var maxQuantity = parseInt($('quantity').max);
+            if (parseInt(quantity) > maxQuantity) {
+                layer.msg(`领用数量不能超过${maxQuantity}`, {icon: 2});
+                return;
+            }
+            
+            // 关闭弹窗并提示
+            layer.confirm('确认领用这些物资吗？', function(index) {
+                layer.close(index);
+                layer.msg('领用登记成功', {icon: 1});
+                
+                // 实际应用中这里会减少库存并记录领用信息
+            });
+        });
+        
+        // 库存盘点按钮点击事件
+        $('stockCheckBtn').addEventListener('click', function() {
+            $('stockCheckModal').style.display = 'flex';
+        });
+        
+        // 确认盘点按钮点击事件
+        $('confirmCheckBtn').addEventListener('click', function() {
+            var checkDate = $('checkDate').value;
+            var supplyId = $('checkSupply').value;
+            var actualStock = $('actualStock').value;
+            
+            if (!checkDate || !supplyId || !actualStock) {
+                layer.msg('请填写完整的盘点信息', {icon: 2});
+                return;
+            }
+            
+            // 关闭弹窗并提示
+            $('stockCheckModal').style.display = 'none';
+            layer.msg('库存盘点记录已保存', {icon: 1});
+        });
+        
+        // 取消和关闭按钮事件
+        $('warningClose').addEventListener('click', () => $('warningModal').style.display = 'none');
+        $('cancelWarningBtn').addEventListener('click', () => $('warningModal').style.display = 'none');
+        $('stockInClose').addEventListener('click', () => $('stockInModal').style.display = 'none');
+        $('cancelStockInBtn').addEventListener('click', () => $('stockInModal').style.display = 'none');
+        $('stockCheckClose').addEventListener('click', () => $('stockCheckModal').style.display = 'none');
+        $('cancelCheckBtn').addEventListener('click', () => $('stockCheckModal').style.display = 'none');
+        
+        form.render();
+    });
+</script>
+</body>
+</html>

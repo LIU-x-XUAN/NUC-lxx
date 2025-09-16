@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>突发健康事件记录</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <style>
+        .container {padding: 15px;}
+        .form-item {margin-bottom: 15px;}
+        .form-label {display: inline-block; width: 120px; text-align: right; margin-right: 10px; vertical-align: middle;}
+        .form-content {display: inline-block; vertical-align: middle;}
+        .required {color: red; margin-right: 5px;}
+        .section-box {margin: 20px 0; padding: 15px; border: 1px solid #eee; border-radius: 4px; background-color: #fafafa;}
+        .section-title {font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #1E9FFF; padding-bottom: 10px; border-bottom: 1px solid #eee;}
+        .btn-group {margin: 20px 0; text-align: center;}
+        .upload-area {border: 1px dashed #ccc; padding: 20px; border-radius: 4px; text-align: center;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>突发健康事件（症状/处置）记录</legend>
+        <div class="layui-field-box">
+            <!-- 居民选择 -->
+            <div class="form-item">
+                <label class="form-label"><span class="required">*</span>居民选择</label>
+                <div class="form-content">
+                    <select class="layui-select" id="residentSelect" style="width: 300px;">
+                        <option value="">请选择居民</option>
+                        <option value="1">张三 - 男 - 35岁</option>
+                        <option value="2">李四 - 女 - 28岁</option>
+                        <option value="3">王五 - 男 - 65岁</option>
+                        <option value="4">赵六 - 女 - 5岁</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 事件信息区 -->
+            <div class="section-box">
+                <div class="section-title"><i class="layui-icon layui-icon-clock"></i> 事件信息区</div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>事件发生时间</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="eventTime" style="width: 300px;" placeholder="选择事件发生的时间">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>发生地点</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="eventLocation" style="width: 500px;" placeholder="输入事件发生的具体地点">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>症状描述</label>
+                    <div class="form-content">
+                        <textarea class="layui-textarea" id="symptoms" style="width: 500px; height: 120px;" placeholder="详细描述居民出现的症状、表现等"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>现场处置措施</label>
+                    <div class="form-content">
+                        <textarea class="layui-textarea" id="onSiteMeasures" style="width: 500px; height: 120px;" placeholder="记录现场采取的急救措施、处理方法等"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 转运与治疗区 -->
+            <div class="section-box">
+                <div class="section-title"><i class="layui-icon layui-icon-ambulance"></i> 转运与治疗区</div>
+                
+                <div class="form-item">
+                    <label class="form-label">转运医院</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="transferHospital" style="width: 500px;" placeholder="输入转运的医院名称，如未转运可留空">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">转运时间</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="transferTime" style="width: 300px;" placeholder="选择转运时间，如未转运可留空">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">后续治疗情况</label>
+                    <div class="form-content">
+                        <textarea class="layui-textarea" id="treatmentSituation" style="width: 500px; height: 120px;" placeholder="记录后续治疗情况、诊断结果等"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 事件附件上传 -->
+            <div class="section-box">
+                <div class="section-title"><i class="layui-icon layui-icon-picture"></i> 事件附件</div>
+                
+                <div class="form-item">
+                    <label class="form-label">上传附件</label>
+                    <div class="form-content">
+                        <div class="upload-area" id="uploadArea">
+                            <i class="layui-icon layui-icon-upload" style="font-size: 30px; color: #1E9FFF;"></i>
+                            <p style="margin-top: 10px;">点击或拖拽文件至此处上传（支持现场照片或视频）</p>
+                            <button type="button" class="layui-btn layui-btn-normal" style="margin-top: 10px;">
+                                <i class="layui-icon"></i> 选择文件
+                            </button>
+                            <div id="uploadFiles" style="margin-top: 15px; text-align: left;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提交事件按钮 -->
+            <div class="btn-group">
+                <button class="layui-btn" id="submitEventBtn"><i class="layui-icon layui-icon-submit"></i> 提交事件</button>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    layui.use(['form', 'laydate', 'upload', 'layer'], function() {
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var upload = layui.upload;
+        var layer = layui.layer;
+        
+        // 辅助函数：通过ID获取元素
+        function $(id) {
+            return document.getElementById(id);
+        }
+        
+        // 初始化日期时间选择器
+        laydate.render({
+            elem: 'eventTime',
+            type: 'datetime'
+        });
+        
+        // 转运时间选择器
+        laydate.render({
+            elem: 'transferTime',
+            type: 'datetime'
+        });
+        
+        // 附件上传功能
+        var uploadInst = upload.render({
+            elem: '#uploadArea',
+            url: '/upload/', // 实际应用中替换为真实上传接口
+            accept: 'file',
+            multiple: true,
+            auto: false, // 不自动上传
+            bindAction: '#uploadArea .layui-btn', // 绑定上传按钮
+            choose: function(obj) {
+                // 预读本地文件
+                obj.preview(function(index, file, result) {
+                    var fileName = file.name;
+                    var fileSize = (file.size / 1024).toFixed(1) + 'KB';
+                    
+                    // 显示已选择的文件
+                    var fileItem = document.createElement('div');
+                    fileItem.className = 'layui-upload-file';
+                    fileItem.innerHTML = `
+                        <i class="layui-icon layui-icon-file"></i>
+                        <span>${fileName}</span>
+                        <span style="color:#666; margin-left:10px;">${fileSize}</span>
+                        <button type="button" class="layui-btn layui-btn-danger layui-btn-xs" style="margin-left:10px;" onclick="this.parentElement.remove()">删除</button>
+                    `;
+                    $('uploadFiles').appendChild(fileItem);
+                });
+            },
+            done: function(res) {
+                // 上传成功回调
+                layer.msg('文件上传成功', {icon: 1});
+            },
+            error: function() {
+                // 上传失败回调
+                layer.msg('文件上传失败', {icon: 2});
+            }
+        });
+        
+        // 提交事件按钮点击事件
+        $('submitEventBtn').addEventListener('click', function() {
+            // 表单验证
+            var residentId = $('residentSelect').value;
+            var eventTime = $('eventTime').value;
+            var eventLocation = $('eventLocation').value;
+            var symptoms = $('symptoms').value;
+            var onSiteMeasures = $('onSiteMeasures').value;
+            
+            if (!residentId) {
+                layer.msg('请选择涉及的居民', {icon: 2});
+                return;
+            }
+            
+            if (!eventTime || !eventLocation || !symptoms || !onSiteMeasures) {
+                layer.msg('请填写完整的事件基本信息', {icon: 2});
+                return;
+            }
+            
+            // 模拟提交
+            layer.confirm('确定要提交突发健康事件记录吗？', function(index) {
+                layer.close(index);
+                layer.msg('正在提交记录...', {icon: 16, time: 1500}, function() {
+                    layer.msg('突发健康事件记录已提交成功', {icon: 1});
+                    // 实际应用中可在此处重置表单
+                });
+            });
+        });
+        
+        // 初始化表单渲染
+        form.render();
+    });
+</script>
+</body>
+</html>

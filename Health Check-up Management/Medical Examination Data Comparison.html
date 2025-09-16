@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>历年体检数据对比</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/layui-src/dist/css/layui.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        .container {padding: 20px;}
+        .form-group {margin-bottom: 15px; display: inline-block; margin-right: 15px;}
+        .chart-box {height: 400px; margin: 20px 0; position: relative;}
+        .loading {position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+                  background: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center;}
+        .report-box {margin-top: 20px; padding: 15px; border: 1px solid #eee; border-radius: 4px; display: none;}
+        .layui-tab {margin-bottom: 20px;}
+        .report-title {font-size: 16px; font-weight: bold; margin-bottom: 10px;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend><i class="fa fa-line-chart"></i> 历年体检数据对比与趋势</legend>
+        <div class="layui-field-box">
+            <!-- 查询条件 -->
+            <div class="layui-form">
+                <div class="form-group">
+                    <label class="layui-form-label">居民</label>
+                    <div class="layui-input-inline">
+                        <select name="resident" lay-verify="required" id="residentSelect">
+                            <option value="">选择居民</option>
+                            <option value="1">张三 (110101199001011234)</option>
+                            <option value="2">李四 (110102199203045678)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="layui-form-label">年份范围</label>
+                    <div class="layui-input-inline">
+                        <select name="yearRange" lay-verify="required" id="yearRange">
+                            <option value="">选择范围</option>
+                            <option value="3">近3年</option>
+                            <option value="5">近5年</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <button class="layui-btn" id="generateChart"><i class="fa fa-bar-chart"></i> 生成图表</button>
+                </div>
+                
+                <!-- 指标选择 -->
+                <div class="layui-tab" lay-filter="indicatorTab">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this" data-indicator="bloodPressure">血压</li>
+                        <li data-indicator="bloodSugar">血糖</li>
+                        <li data-indicator="weight">体重</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- 图表区域 -->
+            <div class="chart-box">
+                <div class="loading" id="loading">
+                    <i class="fa fa-spinner fa-spin" style="font-size:30px;color:#1E9FFF;"></i>
+                </div>
+                <canvas id="trendChart"></canvas>
+            </div>
+            
+            <!-- 报告区域 -->
+            <div class="report-box" id="reportBox">
+                <div class="report-title" id="reportYear">2024年体检报告</div>
+                <div id="reportContent"></div>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/layui-src/dist/layui.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+layui.use(['form', 'element'], function() {
+    const form = layui.form;
+    const element = layui.element;
+    const $ = layui.$;
+    
+    let chart = null;
+    let currentIndicator = 'bloodPressure';
+    let currentData = null;
+    
+    // 模拟体检数据
+    const data = {
+        "1": { // 张三
+            "3": {
+                years: [2022, 2023, 2024],
+                bloodPressure: {systolic: [135, 142, 145], diastolic: [85, 90, 92]},
+                bloodSugar: {values: [5.6, 5.8, 6.2]},
+                weight: {values: [72, 73, 75]}
+            },
+            "5": {
+                years: [2020, 2021, 2022, 2023, 2024],
+                bloodPressure: {systolic: [128, 132, 135, 142, 145], diastolic: [82, 83, 85, 90, 92]},
+                bloodSugar: {values: [5.3, 5.5, 5.6, 5.8, 6.2]},
+                weight: {values: [70, 71, 72, 73, 75]}
+            }
+        },
+        "2": { // 李四
+            "3": {
+                years: [2022, 2023, 2024],
+                bloodPressure: {systolic: [125, 128, 130], diastolic: [80, 82, 83]},
+                bloodSugar: {values: [5.2, 5.3, 5.4]},
+                weight: {values: [65, 66, 67]}
+            },
+            "5": {
+                years: [2020, 2021, 2022, 2023, 2024],
+                bloodPressure: {systolic: [120, 122, 125, 128, 130], diastolic: [78, 79, 80, 82, 83]},
+                bloodSugar: {values: [5.0, 5.1, 5.2, 5.3, 5.4]},
+                weight: {values: [63, 64, 65, 66, 67]}
+            }
+        }
+    };
+    
+    // 正常范围配置
+    const normalRanges = {
+        bloodPressure: {systolic: [90, 140], diastolic: [60, 90]},
+        bloodSugar: [3.9, 6.1],
+        weight: [60, 80]
+    };
+    
+    // 指标切换
+    element.on('tab(indicatorTab)', function() {
+        currentIndicator = $(this).data('indicator');
+        if (currentData) renderChart();
+    });
+    
+    // 生成图表
+    $('#generateChart').click(function() {
+        const resident = $('#residentSelect').val();
+        const range = $('#yearRange').val();
+        
+        if (!resident || !range) {
+            layer.msg('请选择居民和年份范围', {icon: 2});
+            return;
+        }
+        
+        currentData = data[resident][range];
+        $('#loading').show();
+        setTimeout(renderChart, 600); // 模拟加载延迟
+    });
+    
+    // 渲染图表
+    function renderChart() {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        const years = currentData.years;
+        
+        // 销毁现有图表
+        if (chart) chart.destroy();
+        
+        // 图表数据配置
+        let datasets, yLabel, annotations = {};
+        
+        switch(currentIndicator) {
+            case 'bloodPressure':
+                yLabel = '血压 (mmHg)';
+                datasets = [
+                    {label: '收缩压', data: currentData.bloodPressure.systolic, borderColor: '#1e9fff', pointBackgroundColor: '#1e9fff'},
+                    {label: '舒张压', data: currentData.bloodPressure.diastolic, borderColor: '#ff5722', pointBackgroundColor: '#ff5722'}
+                ];
+                // 正常范围阴影
+                annotations = {
+                    systolicRange: {
+                        type: 'rect',
+                        xMin: 0, xMax: years.length-1,
+                        yMin: normalRanges.bloodPressure.systolic[0],
+                        yMax: normalRanges.bloodPressure.systolic[1],
+                        backgroundColor: 'rgba(200,200,200,0.2)'
+                    },
+                    diastolicRange: {
+                        type: 'rect',
+                        xMin: 0, xMax: years.length-1,
+                        yMin: normalRanges.bloodPressure.diastolic[0],
+                        yMax: normalRanges.bloodPressure.diastolic[1],
+                        backgroundColor: 'rgba(200,200,200,0.2)'
+                    }
+                };
+                break;
+                
+            case 'bloodSugar':
+                yLabel = '血糖 (mmol/L)';
+                datasets = [{
+                    label: '空腹血糖', 
+                    data: currentData.bloodSugar.values, 
+                    borderColor: '#009688', 
+                    pointBackgroundColor: '#009688'
+                }];
+                annotations = {
+                    range: {
+                        type: 'rect',
+                        xMin: 0, xMax: years.length-1,
+                        yMin: normalRanges.bloodSugar[0],
+                        yMax: normalRanges.bloodSugar[1],
+                        backgroundColor: 'rgba(200,200,200,0.2)'
+                    }
+                };
+                break;
+                
+            case 'weight':
+                yLabel = '体重 (kg)';
+                datasets = [{
+                    label: '体重', 
+                    data: currentData.weight.values, 
+                    borderColor: '#7B68EE', 
+                    pointBackgroundColor: '#7B68EE'
+                }];
+                annotations = {
+                    range: {
+                        type: 'rect',
+                        xMin: 0, xMax: years.length-1,
+                        yMin: normalRanges.weight[0],
+                        yMax: normalRanges.weight[1],
+                        backgroundColor: 'rgba(200,200,200,0.2)'
+                    }
+                };
+                break;
+        }
+        
+        // 创建图表
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {labels: years, datasets: datasets},
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {title: {display: true, text: '年份'}},
+                    y: {title: {display: true, text: yLabel}}
+                },
+                plugins: {
+                    annotation: {annotations: annotations},
+                    tooltip: {mode: 'index'}
+                },
+                onClick: (e, el) => {
+                    if (el.length) {
+                        const year = years[el[0].index];
+                        showReport(year);
+                    }
+                }
+            }
+        });
+        
+        $('#loading').hide();
+    }
+    
+    // 显示体检报告
+    function showReport(year) {
+        const residentName = $('#residentSelect option:selected').text().split(' ')[0];
+        $('#reportYear').text(`${year}年体检报告`);
+        $('#reportContent').html(`
+            <p><strong>居民：</strong>${residentName}</p>
+            <p><strong>体检日期：</strong>${year}年5月</p>
+            <p><strong>主要指标：</strong>${getReportData(year)}</p>
+            <p><strong>建议：</strong>保持健康饮食，定期锻炼，定期体检。</p>
+        `);
+        $('#reportBox').show();
+    }
+    
+    // 获取报告数据
+    function getReportData(year) {
+        const idx = currentData.years.indexOf(year);
+        if (idx === -1) return '无数据';
+        
+        switch(currentIndicator) {
+            case 'bloodPressure':
+                return `收缩压: ${currentData.bloodPressure.systolic[idx]}mmHg, 舒张压: ${currentData.bloodPressure.diastolic[idx]}mmHg`;
+            case 'bloodSugar':
+                return `空腹血糖: ${currentData.bloodSugar.values[idx]}mmol/L`;
+            case 'weight':
+                return `体重: ${currentData.weight.values[idx]}kg`;
+        }
+    }
+});
+</script>
+</body>
+</html>
+    

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>社区周边急救资源查询与展示</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <style>
+        .container {padding: 15px;}
+        .form-item {margin: 10px 0; display: inline-block; margin-right: 15px;}
+        .form-label {display: inline-block; width: 90px; text-align: right; margin-right: 10px; vertical-align: middle;}
+        .form-content {display: inline-block; vertical-align: middle;}
+        .btn-group {display: inline-block; vertical-align: middle;}
+        .resource-list {margin-top: 20px; display: none;}
+        .section {margin: 15px 0; padding: 10px; background-color: #fafafa; border-radius: 4px;}
+        .section-title {font-size: 15px; font-weight: bold; margin-bottom: 10px; color: #1E9FFF;}
+        .resource-item {padding: 10px; margin-bottom: 10px; background-color: #fff; border-radius: 4px; border-left: 3px solid #1E9FFF;}
+        .resource-info {margin: 5px 0;}
+        .detail-label {font-weight: bold; color: #666;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>社区周边急救资源查询与展示</legend>
+        <div class="layui-field-box">
+            <!-- 查询条件 -->
+            <div class="form-container">
+                <div class="form-item">
+                    <label class="form-label">资源类型</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="resourceType" style="width: 180px;">
+                            <option value="hospital">医院急诊</option>
+                            <option value="pharmacy">24小时药店</option>
+                            <option value="aed">AED设备</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">距离范围</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="distanceRange" style="width: 180px;">
+                            <option value="1">1公里</option>
+                            <option value="3">3公里</option>
+                            <option value="5">5公里</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="layui-btn" id="queryBtn"><i class="layui-icon layui-icon-search"></i> 查询资源</button>
+                </div>
+            </div>
+            
+            <!-- 资源列表 -->
+            <div class="resource-list" id="resourceList">
+                <div class="section">
+                    <div class="section-title">查询结果（<span id="resultCount">3</span>条）</div>
+                    
+                    <div id="resourcesContainer">
+                        <!-- 医院急诊示例 -->
+                        <div class="resource-item">
+                            <div class="resource-info"><strong>社区中心医院急诊科</strong></div>
+                            <div class="resource-info">地址：健康路88号（距离约0.8公里）</div>
+                            <div class="resource-info">联系电话：010-12345678</div>
+                            <div class="resource-info">
+                                <span class="detail-label">详情：</span>
+                                设有内科、外科、儿科急诊，24小时接诊，可处理创伤、心脑血管急症等
+                            </div>
+                            <div class="resource-info" style="margin-top: 10px;">
+                                <button class="layui-btn layui-btn-xs layui-btn-normal navigate-btn" data-name="社区中心医院急诊科" data-address="健康路88号">
+                                    <i class="layui-icon layui-icon-location"></i> 一键导航
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="resource-item">
+                            <div class="resource-info"><strong>市第一医院急诊部</strong></div>
+                            <div class="resource-info">地址：康复大道120号（距离约2.5公里）</div>
+                            <div class="resource-info">联系电话：010-87654321</div>
+                            <div class="resource-info">
+                                <span class="detail-label">详情：</span>
+                                三甲医院，急诊设备齐全，有ICU重症监护，可处理各类急症
+                            </div>
+                            <div class="resource-info" style="margin-top: 10px;">
+                                <button class="layui-btn layui-btn-xs layui-btn-normal navigate-btn" data-name="市第一医院急诊部" data-address="康复大道120号">
+                                    <i class="layui-icon layui-icon-location"></i> 一键导航
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="resource-item">
+                            <div class="resource-info"><strong>仁心医院急诊科</strong></div>
+                            <div class="resource-info">地址：平安街56号（距离约4.2公里）</div>
+                            <div class="resource-info">联系电话：010-56781234</div>
+                            <div class="resource-info">
+                                <span class="detail-label">详情：</span>
+                                特色创伤急诊，有专业急救团队，提供快速诊疗服务
+                            </div>
+                            <div class="resource-info" style="margin-top: 10px;">
+                                <button class="layui-btn layui-btn-xs layui-btn-normal navigate-btn" data-name="仁心医院急诊科" data-address="平安街56号">
+                                    <i class="layui-icon layui-icon-location"></i> 一键导航
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    layui.use(['form', 'layer'], function() {
+        var form = layui.form;
+        var layer = layui.layer;
+        
+        // 辅助函数
+        function $(id) { return document.getElementById(id); }
+        
+        // 资源数据映射
+        var resourceData = {
+            hospital: [
+                {
+                    name: "社区中心医院急诊科",
+                    address: "健康路88号",
+                    distance: "0.8公里",
+                    phone: "010-12345678",
+                    detail: "设有内科、外科、儿科急诊，24小时接诊，可处理创伤、心脑血管急症等"
+                },
+                {
+                    name: "市第一医院急诊部",
+                    address: "康复大道120号",
+                    distance: "2.5公里",
+                    phone: "010-87654321",
+                    detail: "三甲医院，急诊设备齐全，有ICU重症监护，可处理各类急症"
+                },
+                {
+                    name: "仁心医院急诊科",
+                    address: "平安街56号",
+                    distance: "4.2公里",
+                    phone: "010-56781234",
+                    detail: "特色创伤急诊，有专业急救团队，提供快速诊疗服务"
+                }
+            ],
+            pharmacy: [
+                {
+                    name: "康健24小时药店",
+                    address: "幸福路15号",
+                    distance: "0.5公里",
+                    phone: "010-11223344",
+                    detail: "售有各类急救药品、外伤处理用品、心脑血管急救药，支持夜间送药"
+                },
+                {
+                    name: "惠民大药房（24小时）",
+                    address: "和平大道32号",
+                    distance: "1.8公里",
+                    phone: "010-44332211",
+                    detail: "配备执业药师，可购买处方药，有常见急救药品和医疗器械"
+                }
+            ],
+            aed: [
+                {
+                    name: "社区服务中心",
+                    address: "中心广场1号",
+                    distance: "0.3公里",
+                    phone: "010-55667788",
+                    detail: "AED设备位于大厅服务台旁，已定期维护，配有使用说明"
+                },
+                {
+                    name: "社区体育馆",
+                    address: "体育路7号",
+                    distance: "1.2公里",
+                    phone: "010-88776655",
+                    detail: "AED设备位于入口处，24小时可通过保安获取"
+                },
+                {
+                    name: "购物中心",
+                    address: "商业大道100号",
+                    distance: "2.7公里",
+                    phone: "010-99887766",
+                    detail: "AED设备位于一层服务台和三层健身房旁"
+                },
+                {
+                    name: "地铁站",
+                    address: "地铁2号线健康路站",
+                    distance: "3.5公里",
+                    phone: "010-22334455",
+                    detail: "AED设备位于站厅层客服中心旁"
+                }
+            ]
+        };
+        
+        // 查询按钮点击事件
+        $('queryBtn').addEventListener('click', function() {
+            var type = $('resourceType').value;
+            var distance = $('distanceRange').value;
+            
+            // 根据选择的类型和距离筛选数据
+            var filteredData = resourceData[type].filter(item => {
+                var itemDistance = parseFloat(item.distance);
+                return itemDistance <= parseInt(distance);
+            });
+            
+            // 更新结果计数
+            $('resultCount').textContent = filteredData.length;
+            
+            // 生成资源列表HTML
+            var resourcesHtml = '';
+            filteredData.forEach(item => {
+                resourcesHtml += `
+                <div class="resource-item">
+                    <div class="resource-info"><strong>${item.name}</strong></div>
+                    <div class="resource-info">地址：${item.address}（距离约${item.distance}）</div>
+                    <div class="resource-info">联系电话：${item.phone}</div>
+                    <div class="resource-info">
+                        <span class="detail-label">详情：</span>
+                        ${item.detail}
+                    </div>
+                    <div class="resource-info" style="margin-top: 10px;">
+                        <button class="layui-btn layui-btn-xs layui-btn-normal navigate-btn" 
+                                data-name="${item.name}" 
+                                data-address="${item.address}">
+                            <i class="layui-icon layui-icon-location"></i> 一键导航
+                        </button>
+                    </div>
+                </div>
+                `;
+            });
+            
+            // 更新资源容器
+            $('resourcesContainer').innerHTML = resourcesHtml;
+            
+            // 显示资源列表
+            $('resourceList').style.display = 'block';
+            
+            // 绑定新生成的导航按钮事件
+            bindNavigateEvents();
+            
+            layer.msg(`已找到${filteredData.length}个符合条件的资源`, {icon: 1});
+        });
+        
+        // 绑定导航按钮事件
+        function bindNavigateEvents() {
+            document.querySelectorAll('.navigate-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    var name = this.getAttribute('data-name');
+                    var address = this.getAttribute('data-address');
+                    
+                    layer.confirm(`是否导航至 ${name}（${address}）？`, {
+                        btn: ['确认导航', '取消'],
+                        title: '一键导航'
+                    }, function(index) {
+                        layer.close(index);
+                        layer.msg('正在调用地图应用...', {icon: 16, time: 1500}, function() {
+                            layer.msg(`已打开${name}的导航路线`, {icon: 1});
+                        });
+                    });
+                });
+            });
+        }
+        
+        // 初始化绑定导航事件
+        bindNavigateEvents();
+        
+        form.render();
+    });
+</script>
+</body>
+</html>

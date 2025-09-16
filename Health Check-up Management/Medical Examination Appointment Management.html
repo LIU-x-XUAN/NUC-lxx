@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>体检项目、时间预约</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        .layui-card {border:1px solid #f2f2f2;border-radius:5px;margin-bottom:20px;}
+        .layui-card-header {background-color:#fafafa;border-bottom:1px solid #f2f2f2;}
+        .icon {margin-right:10px;color:#1aa094;}
+        .icon-blue {color:#1e9fff!important;}
+        .icon-tip {color:#ff5722!important;}
+        .required::before {content:"*";color:#ff0000;margin-right:4px;font-weight:bold;}
+        .form-section {padding:20px;border:1px dashed #e6e6e6;border-radius:5px;margin-bottom:20px;}
+        .form-section-title {font-size:16px;color:#333;margin-bottom:15px;padding-left:10px;border-left:3px solid #1E9FFF;}
+        .form-row {display:flex;margin-bottom:15px;align-items:flex-end;}
+        .form-group {flex:1;margin-right:15px;}
+        .form-group:last-child {margin-right:0;}
+        .form-tip {color:#666;font-size:12px;margin-top:5px;}
+        .btn-group {margin-top:20px;}
+        .custom-checkboxes {display:flex;flex-wrap:wrap;margin-top:10px;}
+        .custom-checkboxes .layui-form-checkbox {margin:0 15px 10px 0;}
+        .quota-indicator {display:inline-block;margin-left:10px;color:#1e9fff;font-size:12px;}
+        .tab-content {padding:20px 0;}
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="fa fa-calendar-check-o icon icon-blue"></i>体检项目、时间预约（含团体预约）
+            </div>
+            <div class="layui-card-body">
+                <!-- 标签页切换 -->
+                <div class="layui-tab" lay-filter="appointmentTab">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this">居民个人预约</li>
+                        <li>团体预约</li>
+                    </ul>
+                    <div class="layui-tab-content tab-content">
+                        <!-- 居民个人预约 -->
+                        <div class="layui-tab-item layui-show">
+                            <form class="layui-form" lay-filter="personalAppointmentForm">
+                                <!-- 套餐选择区域 -->
+                                <div class="form-section">
+                                    <h3 class="form-section-title">套餐选择</h3>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="layui-form-label">标准化套餐</label>
+                                            <div class="layui-input-block">
+                                                <select name="standardPackage" lay-filter="standardPackage">
+                                                    <option value="">请选择标准化套餐</option>
+                                                    <option value="elderly">老年人体检套餐</option>
+                                                    <option value="youth">青年基础套餐</option>
+                                                    <option value="female">女性专项套餐</option>
+                                                    <option value="special">慢性病专项套餐</option>
+                                                </select>
+                                                <p class="form-tip">选择标准化套餐后可额外勾选自定义项目</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="layui-form-label">自定义套餐项目</label>
+                                            <div class="layui-input-block">
+                                                <div class="custom-checkboxes">
+                                                    <input type="checkbox" name="customItems" value="blood" title="血常规" lay-skin="primary">
+                                                    <input type="checkbox" name="customItems" value="urine" title="尿常规" lay-skin="primary">
+                                                    <input type="checkbox" name="customItems" value="b超" title="腹部B超" lay-skin="primary">
+                                                    <input type="checkbox" name="customItems" value="ecg" title="心电图" lay-skin="primary">
+                                                    <input type="checkbox" name="customItems" value="xray" title="胸部X光" lay-skin="primary">
+                                                    <input type="checkbox" name="customItems" value="liver" title="肝功能" lay-skin="primary">
+                                                    <input type="checkbox" name="customItems" value="kidney" title="肾功能" lay-skin="primary">
+                                                </div>
+                                                <p class="form-tip">可根据需求勾选自定义检查项目</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 预约时间区域 -->
+                                <div class="form-section">
+                                    <h3 class="form-section-title">预约时间</h3>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="layui-form-label required">预约日期</label>
+                                            <div class="layui-input-block">
+                                                <input type="text" name="appointmentDate" class="layui-input" 
+                                                       id="appointmentDate" placeholder="请选择预约日期" 
+                                                       lay-verify="required">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="layui-form-label required">预约时段</label>
+                                            <div class="layui-input-block">
+                                                <select name="appointmentTime" lay-verify="required" lay-filter="timeSlot">
+                                                    <option value="">请选择预约时段</option>
+                                                    <option value="morning">上午 (8:00-12:00)</option>
+                                                    <option value="afternoon">下午 (13:30-17:30)</option>
+                                                </select>
+                                                <span class="quota-indicator" id="quotaIndicator"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 操作按钮 -->
+                                <div class="btn-group">
+                                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="submitPersonal">
+                                        <i class="fa fa-check"></i> 提交预约
+                                    </button>
+                                    <button type="button" class="layui-btn layui-btn-danger" id="cancelPersonal">
+                                        <i class="fa fa-times"></i> 取消预约
+                                    </button>
+                                    <button type="reset" class="layui-btn layui-btn-primary">
+                                        <i class="fa fa-refresh"></i> 重置
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- 团体预约 -->
+                        <div class="layui-tab-item">
+                            <form class="layui-form" lay-filter="groupAppointmentForm">
+                                <div class="form-section">
+                                    <h3 class="form-section-title">团体预约信息</h3>
+                                    <p class="form-tip"><i class="fa fa-info-circle icon-tip"></i> 社区工作人员专用通道，支持10人以上团体预约</p>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="layui-form-label required">团体名称</label>
+                                            <div class="layui-input-block">
+                                                <input type="text" name="groupName" placeholder="请输入团体名称" 
+                                                       autocomplete="off" class="layui-input" lay-verify="required">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="layui-form-label required">团体人数</label>
+                                            <div class="layui-input-block">
+                                                <input type="number" name="groupSize" placeholder="请输入团体人数" 
+                                                       autocomplete="off" class="layui-input" lay-verify="required|number" min="10">
+                                                <p class="form-tip">团体预约需10人及以上</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="layui-form-label required">联系人姓名</label>
+                                            <div class="layui-input-block">
+                                                <input type="text" name="contactPerson" placeholder="请输入联系人姓名" 
+                                                       autocomplete="off" class="layui-input" lay-verify="required">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="layui-form-label required">联系电话</label>
+                                            <div class="layui-input-block">
+                                                <input type="text" name="contactPhone" placeholder="请输入联系电话" 
+                                                       autocomplete="off" class="layui-input" lay-verify="required|phone">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="layui-form-label required">预约日期</label>
+                                            <div class="layui-input-block">
+                                                <input type="text" name="groupDate" class="layui-input" 
+                                                       id="groupDate" placeholder="请选择预约日期" 
+                                                       lay-verify="required">
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label class="layui-form-label">体检套餐</label>
+                                            <div class="layui-input-block">
+                                                <select name="groupPackage">
+                                                    <option value="">请选择体检套餐</option>
+                                                    <option value="elderly">老年人体检套餐</option>
+                                                    <option value="youth">青年基础套餐</option>
+                                                    <option value="custom">混合定制（请备注）</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label class="layui-form-label">备注信息</label>
+                                            <div class="layui-input-block">
+                                                <textarea name="groupRemark" placeholder="请输入特殊需求或备注信息" 
+                                                          class="layui-textarea" rows="3"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 团体预约操作按钮 -->
+                                    <div class="btn-group">
+                                        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="submitGroup">
+                                            <i class="fa fa-check"></i> 提交团体预约
+                                        </button>
+                                        <button type="button" class="layui-btn layui-btn-primary" id="modifyGroup">
+                                            <i class="fa fa-edit"></i> 修改团体信息
+                                        </button>
+                                        <button type="reset" class="layui-btn layui-btn-primary">
+                                            <i class="fa fa-refresh"></i> 重置
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script>
+layui.use(['form', 'layer', 'laydate', 'miniTab'], function() {
+    const form = layui.form;
+    const layer = layui.layer;
+    const laydate = layui.laydate;
+    const $ = layui.jquery;
+    layui.miniTab.listen();
+    
+    // 初始化日期选择器
+    const dateOptions = {
+        min: laydate.now(), // 最小日期为今天
+        max: laydate.now(30), // 最大日期为30天后
+        theme: '#1E9FFF',
+        done: function(value, date) {
+            // 选择日期后更新名额显示
+            updateQuotaIndicator();
+        }
+    };
+    
+    laydate.render({
+        elem: '#appointmentDate',
+        ...dateOptions
+    });
+    
+    laydate.render({
+        elem: '#groupDate',
+        ...dateOptions
+    });
+    
+    // 模拟名额数据
+    const quotaData = {
+        morning: {total: 30, used: 12},
+        afternoon: {total: 20, used: 8}
+    };
+    
+    // 更新名额显示
+    function updateQuotaIndicator() {
+        const timeSlot = $("select[name='appointmentTime']").val();
+        if (timeSlot && $('#appointmentDate').val()) {
+            const quota = quotaData[timeSlot];
+            $('#quotaIndicator').text(`剩余名额: ${quota.total - quota.used}/${quota.total}`);
+        } else {
+            $('#quotaIndicator').text('');
+        }
+    }
+    
+    // 监听时段选择
+    form.on('select(timeSlot)', function() {
+        updateQuotaIndicator();
+    });
+    
+    // 监听标准化套餐选择
+    form.on('select(standardPackage)', function(data) {
+        // 选择标准化套餐后可以清除自定义选项或保留
+        // 这里选择保留，允许用户在标准套餐基础上增加项目
+    });
+    
+    // 提交个人预约
+    form.on('submit(submitPersonal)', function(data) {
+        const packageInfo = [];
+        // 收集套餐信息
+        if (data.field.standardPackage) {
+            const packageMap = {
+                elderly: "老年人体检套餐",
+                youth: "青年基础套餐",
+                female: "女性专项套餐",
+                special: "慢性病专项套餐"
+            };
+            packageInfo.push(packageMap[data.field.standardPackage]);
+        }
+        
+        // 收集自定义项目
+        const customItems = $("input[name='customItems']:checked").map(function() {
+            const itemMap = {
+                blood: "血常规",
+                urine: "尿常规",
+                b超: "腹部B超",
+                ecg: "心电图",
+                xray: "胸部X光",
+                liver: "肝功能",
+                kidney: "肾功能"
+            };
+            return itemMap[this.value];
+        }).get();
+        
+        if (packageInfo.length === 0 && customItems.length === 0) {
+            return layer.msg('请至少选择一个体检项目或套餐', {icon: 2}), false;
+        }
+        
+        if (customItems.length > 0) {
+            packageInfo.push("自定义项目: " + customItems.join('、'));
+        }
+        
+        // 显示预约确认信息
+        layer.confirm(`
+            请确认以下预约信息：<br>
+            体检套餐：${packageInfo.join('<br>')}<br>
+            预约日期：${data.field.appointmentDate}<br>
+            预约时段：${data.field.appointmentTime === 'morning' ? '上午 (8:00-12:00)' : '下午 (13:30-17:30)'}
+        `, {
+            title: '确认预约',
+            icon: 3,
+            btn: ['确认提交', '取消']
+        }, function(index) {
+            layer.close(index);
+            const loadIdx = layer.load(2, {shade: 0.3});
+            
+            setTimeout(function() {
+                layer.close(loadIdx);
+                layer.msg('个人体检预约成功！', {icon: 1, time: 2000}, function() {
+                    // 重置表单
+                    $('form[lay-filter="personalAppointmentForm"]')[0].reset();
+                    form.render();
+                    $('#quotaIndicator').text('');
+                });
+            }, 1500);
+        });
+        
+        return false;
+    });
+    
+    // 取消个人预约
+    $('#cancelPersonal').click(function() {
+        layer.confirm('确定要取消预约吗？<br>请注意：需提前24小时取消预约，否则可能影响下次预约', {
+            title: '取消预约确认',
+            icon: 3,
+            btn: ['确认取消', '取消']
+        }, function(index) {
+            layer.close(index);
+            const loadIdx = layer.load(2, {shade: 0.3});
+            
+            setTimeout(function() {
+                layer.close(loadIdx);
+                $('form[lay-filter="personalAppointmentForm"]')[0].reset();
+                form.render();
+                $('#quotaIndicator').text('');
+                layer.msg('预约已取消', {icon: 1, time: 1500});
+            }, 1000);
+        });
+    });
+    
+    // 提交团体预约
+    form.on('submit(submitGroup)', function(data) {
+        // 显示团体预约确认信息
+        layer.confirm(`
+            请确认以下团体预约信息：<br>
+            团体名称：${data.field.groupName}<br>
+            团体人数：${data.field.groupSize}人<br>
+            联系人：${data.field.contactPerson} (${data.field.contactPhone})<br>
+            预约日期：${data.field.groupDate}<br>
+            体检套餐：${data.field.groupPackage ? 
+                (data.field.groupPackage === 'elderly' ? '老年人体检套餐' : 
+                 data.field.groupPackage === 'youth' ? '青年基础套餐' : '混合定制') : '未选择'}
+        `, {
+            title: '确认团体预约',
+            icon: 3,
+            btn: ['确认提交', '取消']
+        }, function(index) {
+            layer.close(index);
+            const loadIdx = layer.load(2, {shade: 0.3});
+            
+            setTimeout(function() {
+                layer.close(loadIdx);
+                layer.msg('团体体检预约提交成功，工作人员将尽快与您联系确认！', {icon: 1, time: 2000}, function() {
+                    // 保留表单数据，方便修改
+                });
+            }, 1500);
+        });
+        
+        return false;
+    });
+    
+    // 修改团体信息
+    $('#modifyGroup').click(function() {
+        const groupName = $("input[name='groupName']").val().trim();
+        if (!groupName) {
+            return layer.msg('请先填写团体信息并提交，或加载已存在的团体预约', {icon: 2});
+        }
+        
+        layer.confirm(`确定要修改【${groupName}】的预约信息吗？`, {
+            title: '修改团体信息',
+            icon: 3,
+            btn: ['确认修改', '取消']
+        }, function(index) {
+            layer.close(index);
+            layer.msg('请直接在表单中修改信息，修改完成后点击"提交团体预约"保存', {icon: 1, time: 2000});
+        });
+    });
+});
+</script>
+</body>
+</html>
+    

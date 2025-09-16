@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>居民紧急联系人管理</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <style>
+        .container {padding: 15px;}
+        .form-item {margin: 10px 0;}
+        .form-label {display: inline-block; width: 100px; text-align: right; margin-right: 10px;}
+        .form-content {display: inline-block;}
+        .required {color: red;}
+        .section {margin: 15px 0; padding: 10px; background-color: #fafafa; border-radius: 4px;}
+        .section-title {font-size: 15px; font-weight: bold; margin-bottom: 10px; color: #1E9FFF;}
+        .btn-group {margin: 10px 0;}
+        .contact-table {width: 100%; margin-top: 10px;}
+        .call-btn {color: #009688; cursor: pointer;}
+        
+        /* 弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-box {
+            width: 450px;
+            background: #fff;
+            border-radius: 4px;
+            padding: 15px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .modal-title {font-weight: bold;}
+        .modal-close {cursor: pointer;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>居民紧急联系人管理与一键呼叫</legend>
+        <div class="layui-field-box">
+            <!-- 居民选择 -->
+            <div class="form-item">
+                <label class="form-label"><span class="required">*</span>居民</label>
+                <div class="form-content">
+                    <select class="layui-select" id="residentSelect" style="width: 250px;">
+                        <option value="">请选择</option>
+                        <option value="1">张三 - 男 - 35岁</option>
+                        <option value="2">李四 - 女 - 28岁</option>
+                        <option value="3">王五 - 男 - 65岁</option>
+                        <option value="4">赵六 - 女 - 5岁</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 联系人列表 -->
+            <div class="section">
+                <div class="section-title">联系人列表</div>
+                <table class="layui-table contact-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;">选</th>
+                            <th>姓名</th>
+                            <th>关系</th>
+                            <th>手机号</th>
+                            <th>地址</th>
+                            <th>优先级</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contactList">
+                        <tr>
+                            <td><input type="radio" name="contact" lay-skin="primary" data-id="1"></td>
+                            <td>张大山</td>
+                            <td>父亲</td>
+                            <td>13800138000 <span class="call-btn">呼叫</span></td>
+                            <td>幸福小区3号楼</td>
+                            <td>1级</td>
+                            <td>
+                                <button class="layui-btn layui-btn-xs edit-btn" data-id="1">编辑</button>
+                                <button class="layui-btn layui-btn-xs layui-btn-danger delete-btn" data-id="1">删除</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="contact" lay-skin="primary" data-id="2"></td>
+                            <td>李小花</td>
+                            <td>配偶</td>
+                            <td>13900139000 <span class="call-btn">呼叫</span></td>
+                            <td>幸福小区3号楼</td>
+                            <td>2级</td>
+                            <td>
+                                <button class="layui-btn layui-btn-xs edit-btn" data-id="2">编辑</button>
+                                <button class="layui-btn layui-btn-xs layui-btn-danger delete-btn" data-id="2">删除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="btn-group">
+                <button class="layui-btn" id="addContactBtn">新增联系人</button>
+                <button class="layui-btn layui-btn-normal" id="editContactBtn" disabled>编辑联系人</button>
+                <button class="layui-btn layui-btn-danger" id="deleteContactBtn" disabled>删除联系人</button>
+                <button class="layui-btn layui-btn-primary" id="saveContactsBtn" style="float:right;">保存</button>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<!-- 联系人表单弹窗 -->
+<div class="modal" id="contactModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">新增联系人</div>
+            <div class="modal-close" id="modalClose">&times;</div>
+        </div>
+        <div>
+            <form class="layui-form" id="contactForm">
+                <input type="hidden" id="contactId">
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>姓名</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="contactName" style="width: 250px;">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>关系</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="contactRelation" style="width: 250px;">
+                            <option value="">请选择</option>
+                            <option value="father">父亲</option>
+                            <option value="mother">母亲</option>
+                            <option value="spouse">配偶</option>
+                            <option value="child">子女</option>
+                            <option value="other">其他</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>手机号</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="contactPhone" style="width: 250px;">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">地址</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="contactAddress" style="width: 250px;">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">优先级</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="contactPriority" style="width: 250px;">
+                            <option value="1">1级(最高)</option>
+                            <option value="2">2级</option>
+                            <option value="3">3级</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="btn-group" style="text-align: center; margin-top: 15px;">
+                    <button class="layui-btn" id="saveContactBtn">保存</button>
+                    <button type="button" class="layui-btn layui-btn-primary" id="cancelContactBtn">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    layui.use(['form', 'layer'], function() {
+        var form = layui.form;
+        var layer = layui.layer;
+        var currentContactId = null;
+        
+        // 辅助函数
+        function $(id) { return document.getElementById(id); }
+        
+        // 刷新按钮状态
+        function refreshBtnStatus() {
+            var checked = document.querySelector('input[name="contact"]:checked');
+            var editBtn = $('editContactBtn');
+            var deleteBtn = $('deleteContactBtn');
+            
+            if (checked) {
+                currentContactId = checked.getAttribute('data-id');
+                editBtn.disabled = false;
+                deleteBtn.disabled = false;
+            } else {
+                currentContactId = null;
+                editBtn.disabled = true;
+                deleteBtn.disabled = true;
+            }
+        }
+        
+        // 单选框事件
+        document.querySelectorAll('input[name="contact"]').forEach(radio => {
+            radio.addEventListener('change', refreshBtnStatus);
+        });
+        
+        // 新增联系人
+        $('addContactBtn').addEventListener('click', () => {
+            $('contactForm').reset();
+            $('contactId').value = '';
+            $('modalTitle').textContent = '新增联系人';
+            $('contactModal').style.display = 'flex';
+        });
+        
+        // 编辑联系人
+        $('editContactBtn').addEventListener('click', () => {
+            if (!currentContactId) return;
+            
+            var row = document.querySelector(`input[data-id="${currentContactId}"]`).closest('tr');
+            var cells = row.cells;
+            
+            $('contactId').value = currentContactId;
+            $('contactName').value = cells[1].textContent;
+            $('contactPhone').value = cells[3].textContent.substring(0, 11);
+            $('contactAddress').value = cells[4].textContent;
+            $('contactPriority').value = cells[5].textContent.substring(0, 1);
+            
+            $('modalTitle').textContent = '编辑联系人';
+            $('contactModal').style.display = 'flex';
+            form.render('select');
+        });
+        
+        // 删除联系人
+        $('deleteContactBtn').addEventListener('click', () => {
+            if (!currentContactId) return;
+            
+            var name = document.querySelector(`input[data-id="${currentContactId}"]`).closest('tr').cells[1].textContent;
+            layer.confirm(`删除 ${name}?`, index => {
+                layer.close(index);
+                document.querySelector(`input[data-id="${currentContactId}"]`).closest('tr').remove();
+                refreshBtnStatus();
+                layer.msg('已删除');
+            });
+        });
+        
+        // 保存联系人
+        $('saveContactBtn').addEventListener('click', () => {
+            var id = $('contactId').value;
+            var name = $('contactName').value;
+            var relation = $('contactRelation').value;
+            var phone = $('contactPhone').value;
+            
+            if (!name || !relation || !phone) {
+                layer.msg('请填写必填项', {icon: 2});
+                return;
+            }
+            
+            // 关系文本映射
+            var relationMap = {father: '父亲', mother: '母亲', spouse: '配偶', child: '子女', other: '其他'};
+            var priorityText = $('contactPriority').value + '级';
+            
+            if (id) {
+                // 编辑
+                var row = document.querySelector(`input[data-id="${id}"]`).closest('tr');
+                var cells = row.cells;
+                cells[1].textContent = name;
+                cells[2].textContent = relationMap[relation];
+                cells[3].innerHTML = phone + ' <span class="call-btn">呼叫</span>';
+                cells[4].textContent = $('contactAddress').value;
+                cells[5].textContent = priorityText;
+                layer.msg('已更新');
+            } else {
+                // 新增
+                var newId = Date.now();
+                var row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="radio" name="contact" lay-skin="primary" data-id="${newId}"></td>
+                    <td>${name}</td>
+                    <td>${relationMap[relation]}</td>
+                    <td>${phone} <span class="call-btn">呼叫</span></td>
+                    <td>${$('contactAddress').value}</td>
+                    <td>${priorityText}</td>
+                    <td>
+                        <button class="layui-btn layui-btn-xs edit-btn" data-id="${newId}">编辑</button>
+                        <button class="layui-btn layui-btn-xs layui-btn-danger delete-btn" data-id="${newId}">删除</button>
+                    </td>
+                `;
+                $('contactList').appendChild(row);
+                row.querySelector('input[name="contact"]').addEventListener('change', refreshBtnStatus);
+                row.querySelector('.edit-btn').addEventListener('click', function() {
+                    currentContactId = this.getAttribute('data-id');
+                    $('editContactBtn').click();
+                });
+                row.querySelector('.delete-btn').addEventListener('click', function() {
+                    currentContactId = this.getAttribute('data-id');
+                    $('deleteContactBtn').click();
+                });
+                row.querySelector('.call-btn').addEventListener('click', function() {
+                    showCall(phone, name);
+                });
+                form.render('radio');
+                layer.msg('已添加');
+            }
+            
+            $('contactModal').style.display = 'none';
+        });
+        
+        // 取消按钮
+        $('cancelContactBtn').addEventListener('click', () => {
+            $('contactModal').style.display = 'none';
+        });
+        
+        // 关闭弹窗
+        $('modalClose').addEventListener('click', () => {
+            $('contactModal').style.display = 'none';
+        });
+        
+        // 保存所有
+        $('saveContactsBtn').addEventListener('click', () => {
+            if (!$('residentSelect').value) {
+                layer.msg('请选择居民', {icon: 2});
+                return;
+            }
+            layer.confirm('保存所有联系人?', index => {
+                layer.close(index);
+                layer.msg('保存成功');
+            });
+        });
+        
+        // 呼叫功能
+        document.querySelectorAll('.call-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                var phone = this.parentNode.textContent.trim().substring(0, 11);
+                var name = this.closest('tr').cells[1].textContent;
+                showCall(phone, name);
+            });
+        });
+        
+        function showCall(phone, name) {
+            layer.confirm(`呼叫 ${name} (${phone})?`, {btn: ['呼叫', '取消']}, index => {
+                layer.close(index);
+                layer.msg(`正在呼叫 ${phone}...`, {icon: 16, time: 1500}, () => {
+                    layer.msg(`已接通 ${name}`);
+                });
+            });
+        }
+        
+        form.render();
+    });
+</script>
+</body>
+</html>
