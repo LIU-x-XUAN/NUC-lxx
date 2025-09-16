@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>慢性病患病率统计与区域对比报表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <!-- 引入ECharts用于图表展示 -->
+    <script src="https://cdn.staticfile.org/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        .container {padding: 20px;}
+        .filter-bar {padding: 15px 0; border-bottom: 1px solid #eee; margin-bottom: 20px;}
+        .filter-item {display: inline-block; margin-right: 25px;}
+        .filter-label {display: inline-block; width: 100px; text-align: right; margin-right: 10px; vertical-align: middle;}
+        .filter-content {display: inline-block; vertical-align: middle;}
+        .report-container {display: none; margin: 20px 0;}
+        .report-section {margin-bottom: 30px; padding: 15px; background-color: #fff; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);}
+        .section-header {padding: 10px 0; margin-bottom: 15px; border-bottom: 1px solid #f2f2f2;}
+        .section-title {font-size: 16px; font-weight: bold; color: #333;}
+        .formula-tip {padding: 10px; background-color: #f5f7fa; border-left: 3px solid #1E9FFF; margin: 10px 0; color: #666;}
+        .chart-wrapper {height: 400px; margin: 20px 0;}
+        .table-section {margin-top: 20px;}
+        .table-title {font-weight: bold; margin-bottom: 10px; color: #666;}
+        .export-area {text-align: center; margin: 30px 0;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>慢性病患病率统计与区域对比报表</legend>
+        <div class="layui-field-box">
+            <!-- 筛选条件区域 -->
+            <div class="filter-bar">
+                <div class="filter-item">
+                    <label class="filter-label">统计周期</label>
+                    <div class="filter-content">
+                        <select class="layui-select" id="statPeriod" style="width: 150px;">
+                            <option value="quarter">季度</option>
+                            <option value="year">年度</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-item">
+                    <label class="filter-label">对比范围</label>
+                    <div class="filter-content">
+                        <select class="layui-select" id="compareRange" style="width: 220px;">
+                            <option value="neighbor">周边社区</option>
+                            <option value="district">所在区县平均水平</option>
+                            <option value="city">全市平均水平</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-item">
+                    <button class="layui-btn" id="generateBtn"><i class="layui-icon layui-icon-search"></i> 生成报表</button>
+                </div>
+            </div>
+            
+            <!-- 报表内容区域 -->
+            <div class="report-container" id="reportContent">
+                <!-- 患病率计算结果 -->
+                <div class="report-section">
+                    <div class="section-header">
+                        <div class="section-title">患病率计算结果</div>
+                    </div>
+                    
+                    <div class="formula-tip">
+                        计算公式：某慢性病患病率 = 社区内该慢性病患者数 / 社区常住人口总数 × 100%
+                    </div>
+                    
+                    <table class="layui-table" lay-size="sm">
+                        <thead>
+                            <tr>
+                                <th>慢性病类型</th>
+                                <th>社区患者数(人)</th>
+                                <th>社区常住人口数(人)</th>
+                                <th>患病率(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>高血压</td>
+                                <td>456</td>
+                                <td>3850</td>
+                                <td>11.84</td>
+                            </tr>
+                            <tr>
+                                <td>糖尿病</td>
+                                <td>218</td>
+                                <td>3850</td>
+                                <td>5.66</td>
+                            </tr>
+                            <tr>
+                                <td>冠心病</td>
+                                <td>124</td>
+                                <td>3850</td>
+                                <td>3.22</td>
+                            </tr>
+                            <tr>
+                                <td>脑卒中</td>
+                                <td>68</td>
+                                <td>3850</td>
+                                <td>1.77</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 区域对比柱状图 -->
+                <div class="report-section">
+                    <div class="section-header">
+                        <div class="section-title">区域对比柱状图</div>
+                    </div>
+                    
+                    <div class="chart-wrapper" id="compareChart"></div>
+                </div>
+                
+                <!-- 细分数据表格 -->
+                <div class="report-section">
+                    <div class="section-header">
+                        <div class="section-title">细分数据表格</div>
+                    </div>
+                    
+                    <!-- 各年龄段患病率分布 -->
+                    <div class="table-section">
+                        <div class="table-title">各年龄段患病率分布（以高血压为例）</div>
+                        <table class="layui-table" lay-size="sm">
+                            <thead>
+                                <tr>
+                                    <th>年龄段</th>
+                                    <th>该年龄段人口数(人)</th>
+                                    <th>该年龄段患者数(人)</th>
+                                    <th>年龄段患病率(%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>18-44岁</td>
+                                    <td>1250</td>
+                                    <td>68</td>
+                                    <td>5.44</td>
+                                </tr>
+                                <tr>
+                                    <td>45-59岁</td>
+                                    <td>1120</td>
+                                    <td>145</td>
+                                    <td>12.95</td>
+                                </tr>
+                                <tr>
+                                    <td>60-74岁</td>
+                                    <td>980</td>
+                                    <td>182</td>
+                                    <td>18.57</td>
+                                </tr>
+                                <tr>
+                                    <td>75岁及以上</td>
+                                    <td>500</td>
+                                    <td>61</td>
+                                    <td>12.20</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 性别差异分析数据 -->
+                    <div class="table-section">
+                        <div class="table-title">性别差异分析数据（以糖尿病为例）</div>
+                        <table class="layui-table" lay-size="sm">
+                            <thead>
+                                <tr>
+                                    <th>性别</th>
+                                    <th>该性别人口数(人)</th>
+                                    <th>该性别患者数(人)</th>
+                                    <th>性别患病率(%)</th>
+                                    <th>性别间差异(%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>男性</td>
+                                    <td>1980</td>
+                                    <td>125</td>
+                                    <td>6.31</td>
+                                    <td rowspan="2">1.24（男性高于女性）</td>
+                                </tr>
+                                <tr>
+                                    <td>女性</td>
+                                    <td>1870</td>
+                                    <td>93</td>
+                                    <td>4.97</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 导出Excel按钮 -->
+            <div class="export-area">
+                <button class="layui-btn layui-btn-primary" id="exportBtn" disabled><i class="layui-icon layui-icon-download"></i> 导出 Excel</button>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    // 不使用jQuery，采用原生JavaScript实现
+    layui.use(['form', 'layer'], function() {
+        var form = layui.form;
+        var layer = layui.layer;
+        var chartInstance = null;  // 图表实例
+        
+        // 辅助函数：通过ID获取元素
+        function $(id) {
+            return document.getElementById(id);
+        }
+        
+        // 初始化对比柱状图
+        function initComparisonChart(compareType) {
+            var chartDom = $('compareChart');
+            chartInstance = echarts.init(chartDom);
+            
+            // 根据不同对比范围设置不同数据
+            var chartData = {
+                neighbor: {
+                    title: '本社区与周边社区患病率对比',
+                    compareName: '周边社区平均',
+                    data: [10.2, 5.8, 3.5, 1.9]
+                },
+                district: {
+                    title: '本社区与所在区县患病率对比',
+                    compareName: '区县平均水平',
+                    data: [12.5, 6.2, 3.8, 2.1]
+                },
+                city: {
+                    title: '本社区与全市患病率对比',
+                    compareName: '全市平均水平',
+                    data: [13.8, 6.5, 4.2, 2.3]
+                }
+            };
+            
+            var selectedData = chartData[compareType] || chartData.neighbor;
+            
+            // 图表配置
+            var option = {
+                title: {
+                    text: selectedData.title,
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    },
+                    formatter: '{a} <br/>{b}: {c}%'
+                },
+                legend: {
+                    data: ['本社区', selectedData.compareName],
+                    bottom: 10
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['高血压', '糖尿病', '冠心病', '脑卒中']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '患病率(%)',
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                series: [
+                    {
+                        name: '本社区',
+                        type: 'bar',
+                        data: [11.84, 5.66, 3.22, 1.77],
+                        itemStyle: {
+                            color: '#1E9FFF'
+                        }
+                    },
+                    {
+                        name: selectedData.compareName,
+                        type: 'bar',
+                        data: selectedData.data,
+                        itemStyle: {
+                            color: '#FF7D00'
+                        }
+                    }
+                ]
+            };
+            
+            chartInstance.setOption(option);
+            
+            // 响应窗口大小变化
+            window.addEventListener('resize', function() {
+                chartInstance.resize();
+            });
+        }
+        
+        // 生成报表按钮点击事件
+        $('generateBtn').addEventListener('click', function() {
+            // 显示报表内容
+            $('reportContent').style.display = 'block';
+            // 启用导出按钮
+            $('exportBtn').removeAttribute('disabled');
+            
+            // 获取当前选择的对比范围
+            var compareRange = $('compareRange').value;
+            
+            // 初始化图表
+            initComparisonChart(compareRange);
+            
+            layer.msg('报表生成成功', {icon: 1});
+        });
+        
+        // 对比范围变更事件
+        $('compareRange').addEventListener('change', function() {
+            // 如果报表已显示，则更新图表
+            if ($('reportContent').style.display === 'block') {
+                initComparisonChart(this.value);
+            }
+        });
+        
+        // 导出Excel按钮点击事件
+        $('exportBtn').addEventListener('click', function() {
+            layer.confirm('确定要导出当前报表数据吗？', function(index) {
+                layer.close(index);
+                layer.msg('正在导出Excel文件...', {icon: 16, time: 1500}, function() {
+                    layer.msg('Excel文件导出成功', {icon: 1});
+                });
+            });
+        });
+        
+        // 初始化表单渲染
+        form.render();
+    });
+</script>
+</body>
+</html>

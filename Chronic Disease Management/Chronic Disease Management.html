@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>慢性病确诊信息登记</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        .layui-card {border:1px solid #f2f2f2;border-radius:5px;margin-bottom:20px;}
+        .icon {margin-right:10px;color:#1aa094;}
+        .form-item {margin-bottom:15px;}
+        .form-label {display:inline-block;width:120px;text-align:right;margin-right:10px;font-weight:500;}
+        .form-content {display:inline-block;vertical-align:middle;}
+        .disease-checkbox {margin-right:15px;}
+        .upload-tips {display:block;margin-top:5px;color:#666;font-size:12px;}
+        .required-mark {color:red;margin-right:3px;}
+        .stage-select {display:none;}/* 初始隐藏疾病分期下拉框 */
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <!-- 慢性病确诊信息登记卡片 -->
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="fa fa-stethoscope icon"></i>慢性病确诊信息登记
+            </div>
+            <div class="layui-card-body">
+                <form class="layui-form" id="chronicDiseaseForm">
+                    <!-- 居民选择下拉框 -->
+                    <div class="form-item">
+                        <label class="form-label">
+                            <span class="required-mark">*</span>居民选择
+                        </label>
+                        <div class="form-content layui-input-inline" style="width:300px;">
+                            <select name="residentId" lay-verify="required" lay-search class="layui-select">
+                                <option value="">请选择需登记的居民</option>
+                                <option value="1">张三 - 身份证号:110101199001011234</option>
+                                <option value="2">李四 - 身份证号:310101198505056789</option>
+                                <option value="3">王五 - 身份证号:440101197810102345</option>
+                                <option value="4">赵六 - 身份证号:510101199503035678</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 确诊信息区分割线 -->
+                    <div class="layui-form-item">
+                        <div class="layui-col-md12">
+                            <hr style="border:1px dashed #e6e6e6;margin:20px 0;">
+                            <h4 style="color:#1aa094;margin-bottom:15px;"><i class="fa fa-file-text-o"></i> 确诊信息区</h4>
+                        </div>
+                    </div>
+
+                    <!-- 病种选择复选框组 -->
+                    <div class="form-item">
+                        <label class="form-label">
+                            <span class="required-mark">*</span>病种选择
+                        </label>
+                        <div class="form-content">
+                            <div class="layui-form-checkbox layui-form-checked disease-checkbox">
+                                <input type="checkbox" name="diseaseType" value="hypertension" lay-skin="primary" title="高血压" checked>
+                            </div>
+                            <div class="layui-form-checkbox disease-checkbox">
+                                <input type="checkbox" name="diseaseType" value="diabetes" lay-skin="primary" title="糖尿病">
+                            </div>
+                            <div class="layui-form-checkbox disease-checkbox">
+                                <input type="checkbox" name="diseaseType" value="chd" lay-skin="primary" title="冠心病">
+                            </div>
+                            <div class="layui-form-checkbox disease-checkbox">
+                                <input type="checkbox" name="diseaseType" value="stroke" lay-skin="primary" title="脑卒中">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 疾病分期下拉框（按病种联动） -->
+                    <div class="form-item" id="stageContainer">
+                        <label class="form-label">
+                            <span class="required-mark">*</span>疾病分期
+                        </label>
+                        <div class="form-content layui-input-inline" style="width:200px;">
+                            <!-- 高血压分期 -->
+                            <select name="diseaseStage" class="layui-select stage-select" id="hypertensionStage" style="display:block;">
+                                <option value="">请选择高血压分期</option>
+                                <option value="1">1级高血压（轻度）</option>
+                                <option value="2">2级高血压（中度）</option>
+                                <option value="3">3级高血压（重度）</option>
+                                <option value="4">单纯收缩期高血压</option>
+                            </select>
+                            <!-- 糖尿病分期 -->
+                            <select name="diseaseStage" class="layui-select stage-select" id="diabetesStage">
+                                <option value="">请选择糖尿病分型</option>
+                                <option value="1">1型糖尿病</option>
+                                <option value="2">2型糖尿病</option>
+                                <option value="3">妊娠期糖尿病</option>
+                                <option value="4">其他特殊类型糖尿病</option>
+                            </select>
+                            <!-- 冠心病分期 -->
+                            <select name="diseaseStage" class="layui-select stage-select" id="chdStage">
+                                <option value="">请选择冠心病类型</option>
+                                <option value="1">稳定性心绞痛</option>
+                                <option value="2">不稳定性心绞痛</option>
+                                <option value="3">急性心肌梗死</option>
+                                <option value="4">缺血性心肌病</option>
+                            </select>
+                            <!-- 脑卒中分期 -->
+                            <select name="diseaseStage" class="layui-select stage-select" id="strokeStage">
+                                <option value="">请选择脑卒中类型</option>
+                                <option value="1">缺血性脑卒中（脑梗死）</option>
+                                <option value="2">出血性脑卒中（脑出血）</option>
+                                <option value="3">蛛网膜下腔出血</option>
+                                <option value="4">短暂性脑缺血发作（TIA）</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 确诊时间选择器 -->
+                    <div class="form-item">
+                        <label class="form-label">
+                            <span class="required-mark">*</span>确诊时间
+                        </label>
+                        <div class="form-content layui-input-inline" style="width:200px;">
+                            <input type="text" class="layui-input" id="diagnoseDate" name="diagnoseDate" lay-verify="required" placeholder="选择确诊日期">
+                        </div>
+                    </div>
+
+                    <!-- 确诊医院输入框 -->
+                    <div class="form-item">
+                        <label class="form-label">
+                            <span class="required-mark">*</span>确诊医院
+                        </label>
+                        <div class="form-content layui-input-inline" style="width:300px;">
+                            <input type="text" class="layui-input" name="diagnoseHospital" lay-verify="required" placeholder="输入确诊医院名称">
+                        </div>
+                    </div>
+
+                    <!-- 诊断依据文本域 -->
+                    <div class="form-item">
+                        <label class="form-label">
+                            <span class="required-mark">*</span>诊断依据
+                        </label>
+                        <div class="form-content">
+                            <textarea class="layui-textarea" name="diagnoseBasis" lay-verify="required" placeholder="请填写确诊指标（如血压值、血糖值、心电图结果等）及临床症状" style="width:500px;height:120px;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 诊断证明上传框 -->
+                    <div class="form-item">
+                        <label class="form-label">诊断证明上传</label>
+                        <div class="form-content">
+                            <button type="button" class="layui-btn layui-btn-normal" id="uploadBtn">
+                                <i class="fa fa-upload"></i> 选择文件
+                            </button>
+                            <div class="upload-tips">支持格式：JPG、PDF（单个文件大小不超过10MB）</div>
+                            <div id="fileList" style="margin-top:10px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 提交按钮 -->
+                    <div class="form-item">
+                        <label class="form-label"></label>
+                        <div class="form-content">
+                            <button class="layui-btn layui-btn-primary" type="button" id="resetBtn">
+                                <i class="fa fa-refresh"></i> 重置
+                            </button>
+                            <button class="layui-btn layui-btn-normal" type="button" id="submitBtn" style="margin-left:15px;">
+                                <i class="fa fa-save"></i> 提交登记
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script>
+    layui.use(['layer', 'form', 'laydate', 'upload'], function () {
+        var $ = layui.jquery,
+            layer = layui.layer,
+            form = layui.form,
+            laydate = layui.laydate,
+            upload = layui.upload;
+
+        // 1. 初始化日期选择器（确诊时间）
+        laydate.render({
+            elem: '#diagnoseDate',
+            type: 'date',
+            format: 'yyyy-MM-dd',
+            max: new Date().toISOString().split('T')[0], // 最大日期为今天
+            done: function(value, date){
+                console.log('选择的确诊时间：', value);
+            }
+        });
+
+        // 2. 病种选择联动疾病分期下拉框
+        $('input[name="diseaseType"]').on('change', function(){
+            // 取消其他病种的选中状态（只允许选择一个病种）
+            $('input[name="diseaseType"]').not(this).prop('checked', false);
+            form.render('checkbox'); // 重新渲染复选框
+
+            // 获取当前选中的病种值
+            var selectedDisease = $(this).val();
+            if(!selectedDisease) {
+                $('#stageContainer').hide();
+                return;
+            }
+
+            // 显示疾病分期容器
+            $('#stageContainer').show();
+            // 隐藏所有分期下拉框，显示当前病种对应的分期
+            $('.stage-select').hide();
+            $('#' + selectedDisease + 'Stage').show();
+            // 重置分期选择值
+            $('#' + selectedDisease + 'Stage').val('');
+        });
+
+        // 3. 初始化文件上传（诊断证明）
+        var uploadInst = upload.render({
+            elem: '#uploadBtn',
+            url: '/api/upload/diagnoseFile', // 实际项目中替换为真实上传接口
+            accept: 'file',
+            acceptMime: 'image/jpeg,application/pdf', // 限制文件类型
+            exts: 'jpg,pdf', // 限制文件后缀
+            size: 10240, // 限制文件大小（10MB）
+            auto: false, // 关闭自动上传，需手动触发
+            bindAction: '#submitBtn', // 绑定提交按钮为上传触发按钮
+            choose: function(obj){
+                // 选择文件后的回调
+                obj.preview(function(index, file, result){
+                    // 显示已选择的文件信息
+                    var fileHtml = '<div class="layui-upload-file-item" id="fileItem_' + index + '">' +
+                        '<i class="fa ' + (file.type === 'application/pdf' ? 'fa-file-pdf-o' : 'fa-file-image-o') + '"></i> ' +
+                        '<span class="file-name">' + file.name + '</span> ' +
+                        '<span class="file-size">(' + (file.size / 1024).toFixed(1) + 'KB)</span> ' +
+                        '<button type="button" class="layui-btn layui-btn-xs layui-btn-danger file-remove" data-index="' + index + '">删除</button>' +
+                        '</div>';
+                    $('#fileList').html(fileHtml);
+
+                    // 删除文件事件
+                    $('.file-remove').on('click', function(){
+                        var idx = $(this).data('index');
+                        obj.resetFile(idx); // 重置文件队列
+                        $('#fileItem_' + idx).remove();
+                    });
+                });
+            },
+            before: function(obj){
+                // 上传前验证表单
+                var checkResult = form.validate('#chronicDiseaseForm');
+                if(!checkResult) {
+                    return false; // 阻止上传
+                }
+
+                // 显示加载层
+                layer.load(2, {
+                    shade: 0.3,
+                    content: '正在提交登记信息...'
+                });
+            },
+            done: function(res){
+                // 上传成功回调（模拟新增成功）
+                layer.closeAll('loading'); // 关闭加载层
+                if(res.code === 200) {
+                    layer.msg('慢性病确诊信息登记成功！', {
+                        icon: 1,
+                        time: 1500
+                    }, function(){
+                        // 重置表单
+                        $('#chronicDiseaseForm')[0].reset();
+                        form.render();
+                        $('#stageContainer').hide();
+                        $('#fileList').empty();
+                    });
+                } else {
+                    layer.msg('登记失败：' + res.msg, {
+                        icon: 2,
+                        time: 2000
+                    });
+                }
+            },
+            error: function(index, upload){
+                // 上传失败回调
+                layer.closeAll('loading');
+                layer.msg('文件上传失败，请重试！', {
+                    icon: 2,
+                    time: 2000
+                });
+                // 重置上传队列
+                uploadInst.resetFile(index);
+            }
+        });
+
+        // 4. 重置按钮事件
+        $('#resetBtn').on('click', function(){
+            // 重置表单
+            $('#chronicDiseaseForm')[0].reset();
+            form.render(); // 重新渲染表单元素
+            $('#stageContainer').hide(); // 隐藏疾病分期
+            $('#fileList').empty(); // 清空已选文件
+        });
+
+        // 5. 表单验证规则
+        form.verify({
+            required: function(value){
+                if(value === '' || value === null) {
+                    return '该字段为必填项';
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

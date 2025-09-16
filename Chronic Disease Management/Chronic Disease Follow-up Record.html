@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>慢性病患者随访记录</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        .layui-card {border:1px solid #f2f2f2;border-radius:5px;margin-bottom:20px;}
+        .icon {margin-right:10px;color:#1aa094;}
+        .form-item {margin-bottom:15px;}
+        .form-label {display:inline-block;width:120px;text-align:right;margin-right:10px;font-weight:500;}
+        .form-content {display:inline-block;vertical-align:middle;}
+        .upload-tips {display:block;margin-top:5px;color:#666;font-size:12px;}
+        .required-mark {color:red;margin-right:3px;}
+        .followup-cycle {color:#1e9fff;font-size:12px;margin-left:10px;}
+        .history-compare {font-size:12px;margin-left:10px;}
+        .abnormal-value {color:red !important;}
+        .abnormal-tip {color:red;font-size:12px;margin-top:5px;display:block;}
+        .history-record {margin-top:20px;padding-top:15px;border-top:1px dashed #e6e6e6;}
+        .history-record-title {font-weight:600;margin-bottom:10px;color:#333;}
+        .record-item {padding:10px;border:1px solid #f2f2f2;border-radius:4px;margin-bottom:10px;background-color:#f9f9f9;cursor:pointer;}
+        .record-item:hover {background-color:#f0f7ff;}
+        .record-header {display:flex;justify-content:space-between;margin-bottom:5px;}
+        .record-date {font-weight:500;}
+        .record-actions {font-size:12px;}
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <!-- 随访记录卡片 -->
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="fa fa-heartbeat icon"></i>慢性病患者随访记录
+            </div>
+            <div class="layui-card-body">
+                <form class="layui-form" id="followUpForm">
+                    <!-- 居民选择下拉框 -->
+                    <div class="form-item">
+                        <label class="form-label">
+                            <span class="required-mark">*</span>居民选择
+                        </label>
+                        <div class="form-content layui-input-inline" style="width:300px;">
+                            <select name="residentId" lay-verify="required" lay-search class="layui-select" id="residentSelect">
+                                <option value="">请选择慢性病患者</option>
+                                <option value="1" data-disease="hypertension">张三 - 高血压</option>
+                                <option value="2" data-disease="diabetes">李四 - 糖尿病</option>
+                                <option value="3" data-disease="chd">王五 - 冠心病</option>
+                                <option value="4" data-disease="stroke">赵六 - 脑卒中</option>
+                            </select>
+                            <span class="followup-cycle" id="followupCycleTip"></span>
+                        </div>
+                    </div>
+
+                    <!-- 随访信息区分割线 -->
+                    <div class="layui-form-item">
+                        <div class="layui-col-md12">
+                            <hr style="border:1px dashed #e6e6e6;margin:20px 0;">
+                            <h4 style="color:#1aa094;margin-bottom:15px;"><i class="fa fa-stethoscope"></i> 随访信息区</h4>
+                        </div>
+                    </div>
+
+                    <!-- 随访日期选择器 -->
+                    <div class="form-item">
+                        <label class="form-label">
+                            <span class="required-mark">*</span>随访日期
+                        </label>
+                        <div class="form-content layui-input-inline" style="width:200px;">
+                            <input type="text" class="layui-input" id="followUpDate" name="followUpDate" lay-verify="required" placeholder="选择随访日期">
+                            <span class="layui-badge layui-bg-orange" style="margin-top:5px;display:block;">提示：到期前3天将进行提醒</span>
+                        </div>
+                    </div>
+
+                    <!-- 体征数据输入区域 -->
+                    <div class="form-item">
+                        <label class="form-label">
+                            <span class="required-mark">*</span>体征数据
+                        </label>
+                        <div class="form-content">
+                            <div class="layui-form" style="width:500px;">
+                                <div class="layui-form-item" style="margin-bottom:10px;">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label" style="width:80px;">血压</label>
+                                        <div class="layui-input-inline" style="width:100px;">
+                                            <input type="text" name="bloodPressure" placeholder="如:120/80" class="layui-input" id="bloodPressure">
+                                        </div>
+                                        <span class="history-compare" id="bpCompare"></span>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label" style="width:80px;">血糖</label>
+                                        <div class="layui-input-inline" style="width:100px;">
+                                            <input type="text" name="bloodSugar" placeholder="如:5.6" class="layui-input" id="bloodSugar">
+                                        </div>
+                                        <span class="history-compare" id="bsCompare"></span>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label" style="width:80px;">心率</label>
+                                        <div class="layui-input-inline" style="width:100px;">
+                                            <input type="text" name="heartRate" placeholder="如:72" class="layui-input" id="heartRate">
+                                        </div>
+                                        <span class="history-compare" id="hrCompare"></span>
+                                    </div>
+                                    <div class="layui-inline">
+                                        <label class="layui-form-label" style="width:80px;">体重</label>
+                                        <div class="layui-input-inline" style="width:100px;">
+                                            <input type="text" name="weight" placeholder="如:65" class="layui-input" id="weight">
+                                        </div>
+                                        <span class="history-compare" id="wtCompare"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 健康指导文本域 -->
+                    <div class="form-item">
+                        <label class="form-label">
+                            <span class="required-mark">*</span>健康指导
+                        </label>
+                        <div class="form-content">
+                            <textarea class="layui-textarea" name="healthGuidance" lay-verify="required" placeholder="请填写健康指导建议，可分饮食、运动、用药等方面" style="width:500px;height:150px;"></textarea>
+                            <div class="layui-badge layui-bg-blue" style="margin-top:5px;">提示：建议包含饮食、运动、用药等方面的指导</div>
+                        </div>
+                    </div>
+
+                    <!-- 随访附件上传框 -->
+                    <div class="form-item">
+                        <label class="form-label">随访附件</label>
+                        <div class="form-content">
+                            <button type="button" class="layui-btn layui-btn-normal" id="uploadBtn">
+                                <i class="fa fa-upload"></i> 选择文件
+                            </button>
+                            <div class="upload-tips">支持格式：JPG、PNG（可上传随访现场照片，单个文件大小不超过5MB）</div>
+                            <div id="fileList" style="margin-top:10px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="form-item">
+                        <label class="form-label"></label>
+                        <div class="form-content">
+                            <button class="layui-btn layui-btn-primary" type="button" id="resetBtn">
+                                <i class="fa fa-refresh"></i> 重置
+                            </button>
+                            <button class="layui-btn layui-btn-normal" type="button" id="submitBtn" style="margin-left:15px;">
+                                <i class="fa fa-save"></i> 提交随访
+                            </button>
+                            <button class="layui-btn layui-btn-warm" type="button" id="updateBtn" style="margin-left:15px;display:none;">
+                                <i class="fa fa-edit"></i> 修改随访
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 历史随访记录 -->
+        <div class="layui-card history-record">
+            <div class="layui-card-header">
+                <i class="fa fa-history icon"></i>历史随访记录
+            </div>
+            <div class="layui-card-body" id="historyRecordsContainer">
+                <div class="layui-none" id="noRecordsTip">暂无随访记录</div>
+                
+                <!-- 历史记录示例 -->
+                <div class="record-item" data-id="1001">
+                    <div class="record-header">
+                        <span class="record-date">2023-06-15 随访记录</span>
+                        <span class="record-actions">
+                            <a href="javascript:;" class="edit-record"><i class="fa fa-pencil"></i> 编辑</a>
+                        </span>
+                    </div>
+                    <div class="record-content">
+                        <p><strong>体征数据：</strong>血压:130/85 mmHg，血糖:5.8 mmol/L，心率:75 次/分，体重:68 kg</p>
+                        <p><strong>健康指导：</strong>1. 饮食清淡，减少盐分摄入；2. 坚持每天30分钟有氧运动；3. 按时服用降压药物。</p>
+                    </div>
+                </div>
+                
+                <div class="record-item" data-id="1002">
+                    <div class="record-header">
+                        <span class="record-date">2023-05-15 随访记录</span>
+                        <span class="record-actions">
+                            <a href="javascript:;" class="edit-record"><i class="fa fa-pencil"></i> 编辑</a>
+                        </span>
+                    </div>
+                    <div class="record-content">
+                        <p><strong>体征数据：</strong>血压:135/90 mmHg，血糖:6.0 mmol/L，心率:78 次/分，体重:69 kg</p>
+                        <p><strong>健康指导：</strong>1. 控制主食摄入量；2. 每周至少进行3次有氧运动；3. 注意监测血压变化。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script>
+    layui.use(['layer', 'form', 'laydate', 'upload'], function () {
+        var $ = layui.jquery,
+            layer = layui.layer,
+            form = layui.form,
+            laydate = layui.laydate,
+            upload = layui.upload;
+
+        // 当前编辑的随访记录ID
+        var currentRecordId = null;
+        
+        // 模拟历史数据，用于对比
+        var historyData = {
+            hypertension: {
+                bloodPressure: "130/85",
+                bloodSugar: "5.6",
+                heartRate: "72",
+                weight: "68"
+            },
+            diabetes: {
+                bloodPressure: "125/80",
+                bloodSugar: "7.2",
+                heartRate: "75",
+                weight: "70"
+            },
+            chd: {
+                bloodPressure: "135/90",
+                bloodSugar: "5.8",
+                heartRate: "78",
+                weight: "72"
+            },
+            stroke: {
+                bloodPressure: "140/95",
+                bloodSugar: "6.0",
+                heartRate: "80",
+                weight: "75"
+            }
+        };
+
+        // 1. 初始化日期选择器（随访日期）
+        laydate.render({
+            elem: '#followUpDate',
+            type: 'date',
+            format: 'yyyy-MM-dd',
+            max: new Date().toISOString().split('T')[0], // 最大日期为今天
+            done: function(value, date){
+                console.log('选择的随访时间：', value);
+            }
+        });
+
+        // 2. 居民选择联动随访周期提示
+        $('#residentSelect').on('change', function(){
+            var selectedOption = $(this).find('option:selected');
+            var diseaseType = selectedOption.data('disease');
+            
+            // 显示对应的随访周期
+            var cycleText = '';
+            switch(diseaseType) {
+                case 'hypertension':
+                    cycleText = '高血压患者建议每月随访1次';
+                    break;
+                case 'diabetes':
+                    cycleText = '糖尿病患者建议每2周随访1次';
+                    break;
+                case 'chd':
+                    cycleText = '冠心病患者建议每月随访1次';
+                    break;
+                case 'stroke':
+                    cycleText = '脑卒中患者建议每2周随访1次';
+                    break;
+                default:
+                    cycleText = '';
+            }
+            $('#followupCycleTip').text(cycleText);
+            
+            // 清空表单
+            resetForm();
+        });
+
+        // 3. 体征数据输入验证与历史对比
+        function validateVitals() {
+            var residentId = $('#residentSelect').val();
+            if(!residentId) return;
+            
+            var diseaseType = $('#residentSelect').find('option:selected').data('disease');
+            var history = historyData[diseaseType] || {};
+            
+            // 血压验证与对比
+            var bpVal = $('#bloodPressure').val();
+            if(bpVal) {
+                var bpParts = bpVal.split('/');
+                if(bpParts.length !== 2 || isNaN(bpParts[0]) || isNaN(bpParts[1])) {
+                    $('#bpCompare').html('<span class="abnormal-tip">血压格式不正确，请使用"收缩压/舒张压"格式</span>');
+                } else {
+                    var historyBpParts = history.bloodPressure.split('/');
+                    var sysDiff = Math.abs(bpParts[0] - historyBpParts[0]);
+                    var diaDiff = Math.abs(bpParts[1] - historyBpParts[1]);
+                    
+                    if(sysDiff > 20 || diaDiff > 10) {
+                        $('#bloodPressure').addClass('abnormal-value');
+                        $('#bpCompare').html('<span class="abnormal-tip">与历史数据相比波动较大</span>');
+                    } else {
+                        $('#bloodPressure').removeClass('abnormal-value');
+                        $('#bpCompare').html('<span style="color:#009688">与历史数据相比基本稳定</span>');
+                    }
+                }
+            } else {
+                $('#bloodPressure').removeClass('abnormal-value');
+                $('#bpCompare').empty();
+            }
+            
+            // 血糖验证与对比
+            var bsVal = $('#bloodSugar').val();
+            if(bsVal) {
+                if(isNaN(bsVal)) {
+                    $('#bsCompare').html('<span class="abnormal-tip">请输入有效的血糖值</span>');
+                } else {
+                    var diff = Math.abs(bsVal - history.bloodSugar);
+                    if(diff > 1.5) {
+                        $('#bloodSugar').addClass('abnormal-value');
+                        $('#bsCompare').html('<span class="abnormal-tip">与历史数据相比波动较大</span>');
+                    } else {
+                        $('#bloodSugar').removeClass('abnormal-value');
+                        $('#bsCompare').html('<span style="color:#009688">与历史数据相比基本稳定</span>');
+                    }
+                }
+            } else {
+                $('#bloodSugar').removeClass('abnormal-value');
+                $('#bsCompare').empty();
+            }
+            
+            // 心率验证与对比
+            var hrVal = $('#heartRate').val();
+            if(hrVal) {
+                if(isNaN(hrVal) || hrVal < 40 || hrVal > 120) {
+                    $('#hrCompare').html('<span class="abnormal-tip">心率值不在正常范围内</span>');
+                    $('#heartRate').addClass('abnormal-value');
+                } else {
+                    var diff = Math.abs(hrVal - history.heartRate);
+                    if(diff > 15) {
+                        $('#heartRate').addClass('abnormal-value');
+                        $('#hrCompare').html('<span class="abnormal-tip">与历史数据相比波动较大</span>');
+                    } else {
+                        $('#heartRate').removeClass('abnormal-value');
+                        $('#hrCompare').html('<span style="color:#009688">与历史数据相比基本稳定</span>');
+                    }
+                }
+            } else {
+                $('#heartRate').removeClass('abnormal-value');
+                $('#hrCompare').empty();
+            }
+            
+            // 体重验证与对比
+            var wtVal = $('#weight').val();
+            if(wtVal) {
+                if(isNaN(wtVal) || wtVal < 30 || wtVal > 200) {
+                    $('#wtCompare').html('<span class="abnormal-tip">体重值不合理</span>');
+                    $('#weight').addClass('abnormal-value');
+                } else {
+                    var diff = Math.abs(wtVal - history.weight);
+                    if(diff > 5) {
+                        $('#weight').addClass('abnormal-value');
+                        $('#wtCompare').html('<span class="abnormal-tip">与历史数据相比波动较大</span>');
+                    } else {
+                        $('#weight').removeClass('abnormal-value');
+                        $('#wtCompare').html('<span style="color:#009688">与历史数据相比基本稳定</span>');
+                    }
+                }
+            } else {
+                $('#weight').removeClass('abnormal-value');
+                $('#wtCompare').empty();
+            }
+        }
+        
+        // 为所有体征输入框绑定验证事件
+        $('#bloodPressure, #bloodSugar, #heartRate, #weight').on('blur', validateVitals);
+
+        // 4. 初始化文件上传（随访附件）
+        var uploadInst = upload.render({
+            elem: '#uploadBtn',
+            url: '/api/upload/followupFile', // 实际项目中替换为真实上传接口
+            accept: 'images',
+            acceptMime: 'image/jpeg,image/png', // 限制文件类型
+            exts: 'jpg,png', // 限制文件后缀
+            size: 5120, // 限制文件大小（5MB）
+            auto: false, // 关闭自动上传，需手动触发
+            bindAction: '#submitBtn,#updateBtn', // 绑定提交和修改按钮为上传触发按钮
+            choose: function(obj){
+                // 选择文件后的回调
+                obj.preview(function(index, file, result){
+                    // 显示已选择的文件信息
+                    var fileHtml = '<div class="layui-upload-file-item" id="fileItem_' + index + '">' +
+                        '<i class="fa fa-file-image-o"></i> ' +
+                        '<span class="file-name">' + file.name + '</span> ' +
+                        '<span class="file-size">(' + (file.size / 1024).toFixed(1) + 'KB)</span> ' +
+                        '<button type="button" class="layui-btn layui-btn-xs layui-btn-danger file-remove" data-index="' + index + '">删除</button>' +
+                        '</div>';
+                    $('#fileList').html(fileHtml);
+
+                    // 删除文件事件
+                    $('.file-remove').on('click', function(){
+                        var idx = $(this).data('index');
+                        obj.resetFile(idx); // 重置文件队列
+                        $('#fileItem_' + idx).remove();
+                    });
+                });
+            },
+            before: function(obj){
+                // 上传前验证表单
+                var checkResult = true;
+                
+                // 简单验证
+                if(!$('#residentSelect').val()) {
+                    layer.tips('请选择居民', '#residentSelect', {tips: 1});
+                    checkResult = false;
+                } else if(!$('#followUpDate').val()) {
+                    layer.tips('请选择随访日期', '#followUpDate', {tips: 1});
+                    checkResult = false;
+                } else if(!$('#bloodPressure').val() && !$('#bloodSugar').val() && !$('#heartRate').val() && !$('#weight').val()) {
+                    layer.tips('请至少填写一项体征数据', '.form-label:contains("体征数据")', {tips: 1});
+                    checkResult = false;
+                } else if(!$('textarea[name="healthGuidance"]').val()) {
+                    layer.tips('请填写健康指导', 'textarea[name="healthGuidance"]', {tips: 1});
+                    checkResult = false;
+                }
+                
+                if(!checkResult) {
+                    return false; // 阻止上传
+                }
+
+                // 显示加载层
+                layer.load(2, {
+                    shade: 0.3,
+                    content: currentRecordId ? '正在更新随访记录...' : '正在提交随访记录...'
+                });
+            },
+            done: function(res){
+                // 上传成功回调
+                layer.closeAll('loading'); // 关闭加载层
+                if(res.code === 200) {
+                    var msg = currentRecordId ? '随访记录更新成功！' : '随访记录提交成功！';
+                    layer.msg(msg, {
+                        icon: 1,
+                        time: 1500
+                    }, function(){
+                        // 重置表单
+                        resetForm();
+                        // 这里可以添加刷新历史记录列表的逻辑
+                    });
+                } else {
+                    layer.msg('操作失败：' + res.msg, {
+                        icon: 2,
+                        time: 2000
+                    });
+                }
+            },
+            error: function(index, upload){
+                // 上传失败回调
+                layer.closeAll('loading');
+                layer.msg('文件上传失败，请重试！', {
+                    icon: 2,
+                    time: 2000
+                });
+                // 重置上传队列
+                uploadInst.resetFile(index);
+            }
+        });
+
+        // 5. 重置按钮事件
+        $('#resetBtn').on('click', resetForm);
+        
+        // 重置表单函数
+        function resetForm() {
+            // 重置表单
+            $('#followUpForm')[0].reset();
+            form.render(); // 重新渲染表单元素
+            
+            // 清空对比提示
+            $('.history-compare').empty();
+            
+            // 移除异常样式
+            $('#bloodPressure, #bloodSugar, #heartRate, #weight').removeClass('abnormal-value');
+            
+            // 清空已选文件
+            $('#fileList').empty();
+            
+            // 重置当前编辑ID，显示提交按钮，隐藏修改按钮
+            currentRecordId = null;
+            $('#submitBtn').show();
+            $('#updateBtn').hide();
+        }
+
+        // 6. 编辑历史记录
+        $(document).on('click', '.edit-record', function(){
+            var recordItem = $(this).closest('.record-item');
+            currentRecordId = recordItem.data('id');
+            
+            // 从记录中提取数据并填充到表单（实际项目中应从服务器获取完整数据）
+            var recordDate = recordItem.find('.record-date').text().split(' ')[0];
+            var vitalsText = recordItem.find('.record-content p:first').text();
+            var guidanceText = recordItem.find('.record-content p:last').text().replace('健康指导：', '');
+            
+            // 填充表单
+            $('#followUpDate').val(recordDate);
+            $('textarea[name="healthGuidance"]').val(guidanceText.replace(/\d+\. /g, '').replace(/；/g, '\n'));
+            
+            // 提取体征数据（实际项目中应更精确地解析）
+            if(vitalsText.indexOf('血压:') > -1) {
+                var bpMatch = vitalsText.match(/血压:([\d\/]+)/);
+                if(bpMatch && bpMatch[1]) $('#bloodPressure').val(bpMatch[1].trim());
+            }
+            if(vitalsText.indexOf('血糖:') > -1) {
+                var bsMatch = vitalsText.match(/血糖:([\d.]+)/);
+                if(bsMatch && bsMatch[1]) $('#bloodSugar').val(bsMatch[1].trim());
+            }
+            if(vitalsText.indexOf('心率:') > -1) {
+                var hrMatch = vitalsText.match(/心率:(\d+)/);
+                if(hrMatch && hrMatch[1]) $('#heartRate').val(hrMatch[1].trim());
+            }
+            if(vitalsText.indexOf('体重:') > -1) {
+                var wtMatch = vitalsText.match(/体重:(\d+)/);
+                if(wtMatch && wtMatch[1]) $('#weight').val(wtMatch[1].trim());
+            }
+            
+            // 显示修改按钮，隐藏提交按钮
+            $('#submitBtn').hide();
+            $('#updateBtn').show();
+            
+            // 滚动到表单顶部
+            $('html, body').animate({
+                scrollTop: $('.layui-card-header').offset().top - 20
+            }, 300);
+        });
+
+        // 7. 提交随访按钮点击事件
+        $('#submitBtn').on('click', function(){
+            // 触发上传，实际提交逻辑在upload的done回调中
+        });
+        
+        // 8. 修改随访按钮点击事件
+        $('#updateBtn').on('click', function(){
+            if(!currentRecordId) {
+                layer.msg('未选择要修改的随访记录', {icon: 2});
+                return;
+            }
+            // 触发上传，实际修改逻辑在upload的done回调中
+        });
+    });
+</script>
+</body>
+</html>

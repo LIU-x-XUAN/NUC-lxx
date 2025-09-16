@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>用药清单维护与剂量调整</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <style>
+        .container {padding: 20px;}
+        .form-item {margin-bottom: 15px;}
+        .form-label {display: inline-block; width: 120px; text-align: right; margin-right: 10px;}
+        .form-content {display: inline-block; vertical-align: middle;}
+        .required {color: red; margin-right: 5px;}
+        .btn-group {margin: 15px 0; text-align: center;}
+        .btn-group button {margin-right: 10px;}
+        .table-box {margin: 20px 0;}
+        .adjust-area {padding: 15px; border: 1px dashed #e6e6e6; margin: 20px 0;}
+        .adjust-title {font-weight: bold; margin-bottom: 10px; color: #1E9FFF;}
+        .photo-preview {margin: 10px 0; display: flex; gap: 10px;}
+        .preview-img {width: 80px; height: 80px; border: 1px solid #eee; border-radius: 4px;}
+        
+        /* 弹窗居中样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-dialog {
+            width: 500px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .modal-close {
+            cursor: pointer;
+            font-size: 20px;
+            color: #999;
+        }
+        .modal-body {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>用药清单维护与剂量调整记录</legend>
+        <div class="layui-field-box">
+            <!-- 居民选择 -->
+            <div class="form-item">
+                <label class="form-label"><span class="required">*</span>居民选择</label>
+                <div class="form-content">
+                    <select class="layui-select" lay-filter="residentSelect" style="width: 300px;">
+                        <option value="">请选择慢性病患者</option>
+                        <option value="1">张三 - 高血压</option>
+                        <option value="2">李四 - 糖尿病</option>
+                        <option value="3">王五 - 冠心病</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 用药操作按钮组 -->
+            <div class="btn-group">
+                <button class="layui-btn" id="addBtn"><i class="layui-icon layui-icon-addition"></i> 新增用药</button>
+                <button class="layui-btn layui-btn-normal" id="editBtn" disabled><i class="layui-icon layui-icon-edit"></i> 编辑用药</button>
+                <button class="layui-btn layui-btn-danger" id="delBtn" disabled><i class="layui-icon layui-icon-delete"></i> 删除用药</button>
+            </div>
+
+            <!-- 用药列表表格 -->
+            <div class="table-box">
+                <table class="layui-table" lay-size="sm">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">选</th>
+                            <th>药品名称</th>
+                            <th>规格</th>
+                            <th>服用剂量</th>
+                            <th>服用频次</th>
+                            <th>开始时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="medTable">
+                        <tr>
+                            <td><input type="radio" name="med" lay-skin="primary" data-id="1"></td>
+                            <td>硝苯地平缓释片</td>
+                            <td>20mg</td>
+                            <td>1片/次</td>
+                            <td>每日2次</td>
+                            <td>2023-03-15</td>
+                        </tr>
+                        <tr>
+                            <td><input type="radio" name="med" lay-skin="primary" data-id="2"></td>
+                            <td>阿司匹林肠溶片</td>
+                            <td>100mg</td>
+                            <td>1片/次</td>
+                            <td>每日1次</td>
+                            <td>2023-03-15</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 剂量调整区域 -->
+            <div class="adjust-area">
+                <div class="adjust-title">剂量调整记录</div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>调整原因</label>
+                    <div class="form-content">
+                        <textarea class="layui-textarea" style="width: 500px; height: 100px;" placeholder="请填写调整原因"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>调整后方案</label>
+                    <div class="form-content">
+                        <textarea class="layui-textarea" style="width: 500px; height: 100px;" placeholder="请填写调整后用药方案"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">处方照片</label>
+                    <div class="form-content">
+                        <button type="button" class="layui-btn" id="uploadBtn"><i class="layui-icon layui-icon-upload"></i> 上传照片</button>
+                        <div class="photo-preview" id="photoPreview"></div>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="layui-btn" id="saveAdjustBtn"><i class="layui-icon layui-icon-save"></i> 保存调整</button>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<!-- 新增/编辑用药弹窗 (居中版) -->
+<div class="modal-overlay" id="medModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">新增用药</div>
+            <div class="modal-close" id="modalClose">&times;</div>
+        </div>
+        <div class="modal-body">
+            <form class="layui-form" id="medForm">
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>药品名称</label>
+                    <div class="form-content">
+                        <select class="layui-select" lay-filter="drugSelect" style="width: 300px;">
+                            <option value="">请选择药品</option>
+                            <optgroup label="降压药">
+                                <option value="硝苯地平缓释片">硝苯地平缓释片</option>
+                                <option value="氨氯地平片">氨氯地平片</option>
+                            </optgroup>
+                            <optgroup label="降糖药">
+                                <option value="二甲双胍片">二甲双胍片</option>
+                                <option value="胰岛素">胰岛素</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>规格</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" style="width: 300px;" placeholder="如：20mg/片">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>服用剂量</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" style="width: 300px;" placeholder="如：1片/次">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>服用频次</label>
+                    <div class="form-content">
+                        <select class="layui-select" style="width: 300px;">
+                            <option value="">请选择</option>
+                            <option value="每日1次">每日1次</option>
+                            <option value="每日2次">每日2次</option>
+                            <option value="每日3次">每日3次</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>开始时间</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="startDate" style="width: 300px;" placeholder="选择日期">
+                    </div>
+                </div>
+                
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button class="layui-btn" id="saveBtn">保存</button>
+                    <button type="button" class="layui-btn layui-btn-primary" id="cancelBtn">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    // 不使用jQuery，改用原生JavaScript
+    layui.use(['form', 'laydate', 'upload', 'layer'], function() {
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var upload = layui.upload;
+        var layer = layui.layer;
+        
+        // 获取DOM元素的辅助函数
+        function $(id) {
+            return document.getElementById(id);
+        }
+        
+        // 日期选择器
+        laydate.render({
+            elem: 'startDate',
+            type: 'date'
+        });
+        
+        // 单选框事件处理 - 原生JavaScript实现
+        var radioButtons = document.querySelectorAll('input[name="med"]');
+        radioButtons.forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                var editBtn = $('editBtn');
+                var delBtn = $('delBtn');
+                
+                if (this.checked) {
+                    editBtn.removeAttribute('disabled');
+                    delBtn.removeAttribute('disabled');
+                } else {
+                    // 检查是否还有选中的单选框
+                    var hasChecked = false;
+                    radioButtons.forEach(function(r) {
+                        if (r.checked) hasChecked = true;
+                    });
+                    
+                    if (!hasChecked) {
+                        editBtn.setAttribute('disabled', 'disabled');
+                        delBtn.setAttribute('disabled', 'disabled');
+                    }
+                }
+            });
+        });
+        
+        // 新增用药
+        $('addBtn').addEventListener('click', function() {
+            $('modalTitle').textContent = '新增用药';
+            // 重置表单
+            document.getElementById('medForm').reset();
+            // 显示弹窗
+            $('medModal').style.display = 'flex';
+        });
+        
+        // 编辑用药
+        $('editBtn').addEventListener('click', function() {
+            $('modalTitle').textContent = '编辑用药';
+            // 显示弹窗
+            $('medModal').style.display = 'flex';
+            
+            // 实际应用中这里会填充选中的数据
+            // 1. 找到选中的单选框
+            var checkedRadio = document.querySelector('input[name="med"]:checked');
+            if (checkedRadio) {
+                // 2. 获取所在行的数据
+                var row = checkedRadio.closest('tr');
+                var cells = row.querySelectorAll('td');
+                
+                // 3. 填充到表单中
+                var drugSelect = document.querySelector('select[lay-filter="drugSelect"]');
+                drugSelect.value = cells[1].textContent;
+                
+                // 重新渲染Layui表单
+                form.render('select');
+            }
+        });
+        
+        // 删除用药
+        $('delBtn').addEventListener('click', function() {
+            layer.confirm('确定要删除选中的用药记录吗？', function(index) {
+                // 找到选中的单选框
+                var checkedRadio = document.querySelector('input[name="med"]:checked');
+                if (checkedRadio) {
+                    // 删除所在行
+                    var row = checkedRadio.closest('tr');
+                    row.parentNode.removeChild(row);
+                    
+                    // 禁用按钮
+                    $('editBtn').setAttribute('disabled', 'disabled');
+                    $('delBtn').setAttribute('disabled', 'disabled');
+                    
+                    // 重新渲染表单
+                    form.render('radio');
+                }
+                
+                layer.close(index);
+                layer.msg('删除成功');
+            });
+        });
+        
+        // 关闭弹窗
+        $('modalClose').addEventListener('click', function() {
+            $('medModal').style.display = 'none';
+        });
+        
+        $('cancelBtn').addEventListener('click', function() {
+            $('medModal').style.display = 'none';
+        });
+        
+        // 保存用药
+        $('saveBtn').addEventListener('click', function() {
+            $('medModal').style.display = 'none';
+            layer.msg('保存成功');
+        });
+        
+        // 保存调整记录
+        $('saveAdjustBtn').addEventListener('click', function() {
+            layer.msg('调整记录已保存');
+        });
+        
+        // 上传处方照片
+        upload.render({
+            elem: 'uploadBtn',
+            url: '/upload/',
+            accept: 'images',
+            exts: 'jpg|png',
+            multiple: true,
+            number: 2,
+            done: function(res) {
+                // 模拟上传成功
+                var img = document.createElement('img');
+                img.src = 'https://picsum.photos/80/80';
+                img.className = 'preview-img';
+                img.alt = '处方照片';
+                $('photoPreview').appendChild(img);
+                
+                layer.msg('上传成功');
+            }
+        });
+    });
+</script>
+</body>
+</html>
+    
