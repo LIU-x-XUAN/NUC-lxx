@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>社区人口与健康档案统计</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <script src="https://cdn.staticfile.org/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        .container {
+            padding: 15px;
+            min-height: 100%;
+            box-sizing: border-box;
+        }
+        .form-item {
+            margin: 10px 0;
+            display: inline-block;
+            margin-right: 15px;
+        }
+        .form-label {
+            display: inline-block;
+            width: 80px;
+            text-align: right;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .form-content {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .btn-group {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .section {
+            margin: 15px 0;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        .section-title {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #1E9FFF;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .chart-container {
+            width: 100%;
+            height: 60vh; /* 使用视口高度单位，使图表高度适应屏幕 */
+            min-height: 350px; /* 确保在小屏幕上有足够高度 */
+            margin: 15px 0;
+        }
+        .statistics-result {
+            display: none;
+            margin-top: 12px;
+        }
+        .formula {
+            padding: 8px;
+            background-color: #f0f7ff;
+            border-left: 3px solid #1E9FFF;
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .layui-table {
+            width: 100%;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>社区人口结构与健康档案覆盖率统计</legend>
+        <div class="layui-field-box">
+            <!-- 统计条件 -->
+            <div class="form-container">
+                <div class="form-item">
+                    <label class="form-label">统计周期</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="statisticPeriod" style="width: 150px;">
+                            <option value="quarter">季度</option>
+                            <option value="year">年度</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">统计年份</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="statisticYear" style="width: 150px;">
+                            <option value="2025">2025年</option>
+                            <option value="2024">2024年</option>
+                            <option value="2023">2023年</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item" id="quarterSelect">
+                    <label class="form-label">季度</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="statisticQuarter" style="width: 150px;">
+                            <option value="1">第一季度</option>
+                            <option value="2">第二季度</option>
+                            <option value="3">第三季度</option>
+                            <option value="4">第四季度</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="layui-btn" id="generateReportBtn"><i class="layui-icon layui-icon-refresh"></i> 生成统计</button>
+                </div>
+            </div>
+            
+            <!-- 统计结果区域 -->
+            <div class="statistics-result" id="statisticsResult">
+                <!-- 人口结构统计 -->
+                <div class="section">
+                    <div class="section-title"><i class="layui-icon layui-icon-chart"></i> 人口结构统计</div>
+                    
+                    <div class="form-item">
+                        <label class="form-label">图表类型</label>
+                        <div class="form-content">
+                            <select class="layui-select" id="chartType" style="width: 150px;">
+                                <option value="pie">饼图</option>
+                                <option value="bar">柱状图</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- 年龄段分布 -->
+                    <div>
+                        <h3 style="font-size: 14px; margin: 8px 0;">年龄段分布</h3>
+                        <div class="chart-container" id="ageDistributionChart"></div>
+                    </div>
+                    
+                    <!-- 性别比例 -->
+                    <div>
+                        <h3 style="font-size: 14px; margin: 8px 0;">性别比例</h3>
+                        <div class="chart-container" id="genderRatioChart"></div>
+                    </div>
+                    
+                    <!-- 户籍类型分布 -->
+                    <div>
+                        <h3 style="font-size: 14px; margin: 8px 0;">户籍类型分布</h3>
+                        <div class="chart-container" id="householdTypeChart"></div>
+                    </div>
+                </div>
+                
+                <!-- 档案覆盖率统计 -->
+                <div class="section">
+                    <div class="section-title"><i class="layui-icon layui-icon-file-text"></i> 健康档案覆盖率统计</div>
+                    
+                    <div class="formula">
+                        <strong>计算公式：</strong>健康档案覆盖率 = 已建立健康档案的居民数 / 社区常住人口总数 × 100%
+                    </div>
+                    
+                    <h3 style="font-size: 14px; margin: 8px 0;">按年龄段拆分</h3>
+                    <table class="layui-table" lay-size="sm">
+                        <thead>
+                            <tr>
+                                <th>年龄段</th>
+                                <th>常住人口数</th>
+                                <th>已建档案数</th>
+                                <th>覆盖率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>0-17岁</td><td>1,256</td><td>1,198</td><td>95.4%</td></tr>
+                            <tr><td>18-34岁</td><td>2,845</td><td>2,134</td><td>75.0%</td></tr>
+                            <tr><td>35-59岁</td><td>3,128</td><td>2,752</td><td>88.0%</td></tr>
+                            <tr><td>60-74岁</td><td>1,567</td><td>1,530</td><td>97.6%</td></tr>
+                            <tr><td>75岁以上</td><td>682</td><td>678</td><td>99.4%</td></tr>
+                            <tr><td><strong>总计</strong></td><td><strong>9,478</strong></td><td><strong>8,292</strong></td><td><strong>87.5%</strong></td></tr>
+                        </tbody>
+                    </table>
+                    
+                    <h3 style="font-size: 14px; margin: 8px 0;">按社区片区拆分</h3>
+                    <table class="layui-table" lay-size="sm">
+                        <thead>
+                            <tr>
+                                <th>社区片区</th>
+                                <th>常住人口数</th>
+                                <th>已建档案数</th>
+                                <th>覆盖率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>东片区</td><td>2,456</td><td>2,150</td><td>87.5%</td></tr>
+                            <tr><td>西片区</td><td>3,120</td><td>2,785</td><td>89.3%</td></tr>
+                            <tr><td>南片区</td><td>1,875</td><td>1,590</td><td>84.8%</td></tr>
+                            <tr><td>北片区</td><td>2,027</td><td>1,767</td><td>87.2%</td></tr>
+                            <tr><td><strong>总计</strong></td><td><strong>9,478</strong></td><td><strong>8,292</strong></td><td><strong>87.5%</strong></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 导出报表按钮 -->
+                <div class="btn-group" style="text-align: center; margin-top: 15px; margin-bottom: 30px;">
+                    <button class="layui-btn layui-btn-normal" id="exportReportBtn"><i class="layui-icon layui-icon-download"></i> 导出报表</button>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    layui.use(['form', 'layer'], function() {
+        var form = layui.form;
+        var layer = layui.layer;
+        var $ = id => document.getElementById(id);
+        
+        // 初始化图表
+        var charts = {
+            age: echarts.init($('ageDistributionChart')),
+            gender: echarts.init($('genderRatioChart')),
+            household: echarts.init($('householdTypeChart'))
+        };
+        
+        // 统计周期切换
+        $('statisticPeriod').addEventListener('change', function() {
+            $('quarterSelect').style.display = this.value === 'quarter' ? 'block' : 'none';
+        });
+        
+        // 图表类型切换
+        $('chartType').addEventListener('change', function() {
+            renderCharts(this.value);
+        });
+        
+        // 生成统计
+        $('generateReportBtn').addEventListener('click', function() {
+            $('statisticsResult').style.display = 'block';
+            renderCharts($('chartType').value);
+            // 触发一次resize确保图表占满容器
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 100);
+            layer.msg('统计数据已生成', {icon: 1});
+        });
+        
+        // 导出报表
+        $('exportReportBtn').addEventListener('click', function() {
+            layer.confirm('导出统计报表？支持Excel和PDF格式', {
+                btn: ['Excel', 'PDF', '取消'],
+                title: '导出报表'
+            }, (i) => {
+                layer.close(i);
+                layer.msg(`正在导出${i===0?'Excel':'PDF'}报表...`, {icon: 16, time: 1500}, () => {
+                    layer.msg(`${i===0?'Excel':'PDF'}报表导出成功`, {icon: 1});
+                });
+            });
+        });
+        
+        // 渲染图表
+        function renderCharts(type) {
+            // 数据
+            const data = {
+                age: {categories: ['0-17岁', '18-34岁', '35-59岁', '60-74岁', '75岁以上'], values: [1256, 2845, 3128, 1567, 682], percentages: ['13.2%', '30.0%', '33.0%', '16.5%', '7.2%']},
+                gender: {categories: ['男性', '女性'], values: [4856, 4622], percentages: ['51.2%', '48.8%']},
+                household: {categories: ['本地户籍', '非本地户籍'], values: [6542, 2936], percentages: ['69.0%', '31.0%']}
+            };
+            
+            // 图表配置 - 适应屏幕并占满显示区域
+            const getOption = (title, data, type) => type === 'pie' ? {
+                title: {text: title, left: 'center'},
+                tooltip: {trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)'},
+                legend: {
+                    show: data.categories.length > 2,
+                    orient: 'horizontal',
+                    bottom: 0,
+                    data: data.categories,
+                    textStyle: {fontSize: 12}
+                },
+                series: [{
+                    name: '人数',
+                    type: 'pie',
+                    radius: '70%',
+                    center: ['50%', '50%'],
+                    data: data.categories.map((item, i) => ({name: item, value: data.values[i]})),
+                    emphasis: {itemStyle: {shadowBlur: 10, shadowColor: 'rgba(0,0,0,0.5)'}},
+                    label: {
+                        show: true,
+                        formatter: '{b}: {d}%',
+                        fontSize: 12
+                    }
+                }]
+            } : {
+                title: {text: title, left: 'center'},
+                tooltip: {trigger: 'axis', formatter: '{a} <br/>{b}: {c} 人 ({d})'},
+                grid: {left: '3%', right: '3%', bottom: '10%', top: '15%', containLabel: true},
+                legend: {show: false},
+                xAxis: {type: 'category', data: data.categories, axisLabel: {fontSize: 12}},
+                yAxis: {type: 'value', name: '人数', axisLabel: {fontSize: 12}},
+                series: [{
+                    name: '人口数量',
+                    type: 'bar',
+                    data: data.values.map((v, i) => ({
+                        value: v,
+                        itemStyle: {color: i%2 ? '#36BFFA' : '#1E9FFF'},
+                        label: {show: true, position: 'top', formatter: data.percentages[i], fontSize: 12}
+                    }))
+                }]
+            };
+            
+            // 更新图表
+            charts.age.setOption(getOption('年龄段分布', data.age, type));
+            charts.gender.setOption(getOption('性别比例', data.gender, type));
+            charts.household.setOption(getOption('户籍类型分布', data.household, type));
+        }
+        
+        // 窗口大小调整时重新计算图表尺寸
+        window.addEventListener('resize', () => {
+            // 调整图表大小以适应容器
+            Object.values(charts).forEach(chart => {
+                chart.resize();
+            });
+        });
+        
+        form.render();
+    });
+</script>
+</body>
+</html>

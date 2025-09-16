@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>疫苗接种率统计与未接种人群追踪</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <style>
+        .container {padding: 20px;}
+        .form-item {margin-bottom: 20px; display: inline-block; margin-right: 20px;}
+        .form-label {display: inline-block; width: 100px; text-align: right; margin-right: 10px; vertical-align: middle;}
+        .form-content {display: inline-block; vertical-align: middle;}
+        .btn-group {display: inline-block; vertical-align: middle;}
+        .statistics-result {display: none; margin: 20px 0;}
+        .result-section {margin: 20px 0; padding: 15px; border: 1px solid #eee; border-radius: 4px; background-color: #fafafa;}
+        .section-title {font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #1E9FFF; padding-bottom: 10px; border-bottom: 1px solid #eee;}
+        .formula-tip {color: #666; margin: 10px 0; padding: 10px; background-color: #fff; border-left: 3px solid #1E9FFF;}
+        .table-container {margin: 20px 0;}
+        .rate-card {display: inline-block; padding: 15px 20px; margin-right: 20px; background-color: #fff; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);}
+        .rate-value {font-size: 24px; font-weight: bold; color: #1E9FFF;}
+        .rate-label {color: #666;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>疫苗接种率统计与未接种人群追踪</legend>
+        <div class="layui-field-box">
+            <!-- 筛选条件区域 -->
+            <div class="filter-area">
+                <div class="form-item">
+                    <label class="form-label"><span style="color: red;">*</span>疫苗类型</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="vaccineType" style="width: 200px;">
+                            <option value="">请选择疫苗</option>
+                            <option value="hepatitisB">乙肝疫苗</option>
+                            <option value="influenza">流感疫苗</option>
+                            <option value="measles">麻疹疫苗</option>
+                            <option value="hpv">HPV疫苗</option>
+                            <option value="pneumonia">肺炎球菌疫苗</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span style="color: red;">*</span>统计周期</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="statCycle" style="width: 200px;">
+                            <option value="monthly">月度</option>
+                            <option value="quarterly">季度</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="layui-btn" id="generateStatsBtn"><i class="layui-icon layui-icon-refresh"></i> 生成统计</button>
+                </div>
+            </div>
+            
+            <!-- 统计结果区域 -->
+            <div class="statistics-result" id="statsResult">
+                <!-- 接种率结果 -->
+                <div class="result-section">
+                    <div class="section-title"><i class="layui-icon layui-icon-piechart"></i> 接种率结果</div>
+                    
+                    <div class="formula-tip">
+                        计算公式：某疫苗接种率 = 完成该疫苗接种的人数 / 应接种人数 × 100%
+                    </div>
+                    
+                    <div>
+                        <div class="rate-card">
+                            <div class="rate-value">78.5%</div>
+                            <div class="rate-label">疫苗接种率</div>
+                        </div>
+                        <div class="rate-card">
+                            <div class="rate-value">1,256</div>
+                            <div class="rate-label">应接种人数</div>
+                        </div>
+                        <div class="rate-card">
+                            <div class="rate-value">986</div>
+                            <div class="rate-label">已接种人数</div>
+                        </div>
+                        <div class="rate-card">
+                            <div class="rate-value">270</div>
+                            <div class="rate-label">未接种人数</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 未接种人群列表 -->
+                <div class="result-section">
+                    <div class="section-title"><i class="layui-icon layui-icon-user"></i> 未接种人群列表</div>
+                    
+                    <div class="table-container">
+                        <table class="layui-table" lay-size="sm">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>姓名</th>
+                                    <th>性别</th>
+                                    <th>年龄</th>
+                                    <th>联系方式</th>
+                                    <th>未接种疫苗</th>
+                                    <th>未接种原因</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="unvaccinatedList">
+                                <tr>
+                                    <td>1</td>
+                                    <td>钱七</td>
+                                    <td>男</td>
+                                    <td>42</td>
+                                    <td>138****5678</td>
+                                    <td>流感疫苗</td>
+                                    <td>逾期未种</td>
+                                    <td><button class="layui-btn layui-btn-xs follow-up-btn" data-id="1">跟踪随访</button></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>孙八</td>
+                                    <td>女</td>
+                                    <td>29</td>
+                                    <td>139****1234</td>
+                                    <td>HPV疫苗</td>
+                                    <td>拒绝接种</td>
+                                    <td><button class="layui-btn layui-btn-xs follow-up-btn" data-id="2">跟踪随访</button></td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>周九</td>
+                                    <td>男</td>
+                                    <td>55</td>
+                                    <td>136****8901</td>
+                                    <td>肺炎球菌疫苗</td>
+                                    <td>禁忌未种</td>
+                                    <td><button class="layui-btn layui-btn-xs follow-up-btn" data-id="3">跟踪随访</button></td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>吴十</td>
+                                    <td>女</td>
+                                    <td>36</td>
+                                    <td>135****2345</td>
+                                    <td>流感疫苗</td>
+                                    <td>逾期未种</td>
+                                    <td><button class="layui-btn layui-btn-xs follow-up-btn" data-id="4">跟踪随访</button></td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>郑十一</td>
+                                    <td>男</td>
+                                    <td>62</td>
+                                    <td>137****6789</td>
+                                    <td>肺炎球菌疫苗</td>
+                                    <td>禁忌未种</td>
+                                    <td><button class="layui-btn layui-btn-xs follow-up-btn" data-id="5">跟踪随访</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    // 不使用jQuery，采用原生JavaScript实现
+    layui.use(['form', 'layer'], function() {
+        var form = layui.form;
+        var layer = layui.layer;
+        
+        // 辅助函数：通过ID获取元素
+        function $(id) {
+            return document.getElementById(id);
+        }
+        
+        // 生成统计按钮点击事件
+        $('generateStatsBtn').addEventListener('click', function() {
+            // 获取选择的疫苗类型和统计周期
+            var vaccineType = $('vaccineType').value;
+            var statCycle = $('statCycle').value;
+            
+            // 验证选择
+            if (!vaccineType || !statCycle) {
+                layer.msg('请选择疫苗类型和统计周期', {icon: 2});
+                return;
+            }
+            
+            // 显示统计结果区域
+            $('statsResult').style.display = 'block';
+            
+            // 获取疫苗名称文本
+            var vaccineText = '';
+            var options = $('vaccineType').options;
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].value === vaccineType) {
+                    vaccineText = options[i].text;
+                    break;
+                }
+            }
+            
+            // 更新未接种人群列表中的疫苗名称
+            var rows = document.querySelectorAll('#unvaccinatedList tr');
+            rows.forEach(function(row) {
+                var vaccineCell = row.cells[5];
+                vaccineCell.textContent = vaccineText;
+            });
+            
+            layer.msg('统计数据生成成功', {icon: 1});
+        });
+        
+        // 跟踪随访按钮点击事件（事件委托方式处理动态元素）
+        document.getElementById('unvaccinatedList').addEventListener('click', function(e) {
+            if (e.target.classList.contains('follow-up-btn')) {
+                var id = e.target.getAttribute('data-id');
+                var name = e.target.closest('tr').cells[1].textContent;
+                
+                layer.confirm(`确定要对 ${name} 进行跟踪随访吗？`, function(index) {
+                    layer.close(index);
+                    layer.msg(`已记录对 ${name} 的随访计划`, {icon: 1});
+                });
+            }
+        });
+        
+        // 初始化表单渲染
+        form.render();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>健康信息更新与修改轨迹记录</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        .layui-card {border:1px solid #f2f2f2;border-radius:5px;margin-bottom:20px;}
+        .layui-card-header {background-color:#fafafa;border-bottom:1px solid #f2f2f2;}
+        .icon {margin-right:10px;color:#1aa094;}
+        .icon-blue {color:#1e9fff!important;}
+        .icon-tip {color:#ff5722!important;}
+        .required::before {content:"*";color:#ff0000;margin-right:4px;font-weight:bold;}
+        .form-section {padding:20px;border:1px dashed #e6e6e6;border-radius:5px;margin-bottom:20px;}
+        .form-section-title {font-size:16px;color:#333;margin-bottom:15px;padding-left:10px;border-left:3px solid #1E9FFF;}
+        .form-row {display:flex;margin-bottom:15px;align-items:flex-end;}
+        .form-group {flex:1;margin-right:15px;}
+        .form-group:last-child {margin-right:0;}
+        .form-tip {color:#666;font-size:12px;margin-top:5px;}
+        .readonly-input {background-color:#f5f5f5;color:#999;}
+        .track-list {max-height:500px;overflow-y:auto;}
+        .track-item {padding:15px;border-bottom:1px solid #f2f2f2;}
+        .track-item:last-child {border-bottom:0;}
+        .track-header {display:flex;justify-content:space-between;margin-bottom:10px;}
+        .track-operator {font-weight:bold;color:#1e9fff;}
+        .track-time {color:#666;font-size:12px;}
+        .track-field {margin-bottom:5px;padding-left:5px;border-left:2px solid #1E9FFF;}
+        .track-content {padding:10px;background-color:#f9f9f9;border-radius:4px;margin-bottom:8px;}
+        .btn-submit {margin-top:20px;}
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="fa fa-medkit icon icon-blue"></i>健康信息更新与修改轨迹记录
+            </div>
+            <div class="layui-card-body">
+                <div class="layui-row">
+                    <!-- 左侧档案编辑区 -->
+                    <div class="layui-col-md6">
+                        <form class="layui-form" lay-filter="healthUpdateForm">
+                            <div class="form-section">
+                                <h3 class="form-section-title">档案编辑区</h3>
+                                
+                                <!-- 基础信息（不可编辑） -->
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="layui-form-label">姓名</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" value="张三" class="layui-input readonly-input" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="layui-form-label">身份证号</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" value="110101199001011234" class="layui-input readonly-input" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="layui-form-label">家庭住址</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" value="北京市朝阳区幸福路88号" class="layui-input readonly-input" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 可编辑健康信息 -->
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="layui-form-label">身高(cm)</label>
+                                        <div class="layui-input-block">
+                                            <input type="number" name="height" value="175" placeholder="请输入身高" 
+                                                   autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="layui-form-label">体重(kg)</label>
+                                        <div class="layui-input-block">
+                                            <input type="number" name="weight" value="72" placeholder="请输入体重" 
+                                                   autocomplete="off" class="layui-input">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="layui-form-label">血型</label>
+                                        <div class="layui-input-block">
+                                            <select name="bloodType">
+                                                <option value="A">A型</option>
+                                                <option value="B">B型</option>
+                                                <option value="AB" selected>AB型</option>
+                                                <option value="O">O型</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="layui-form-label">联系电话</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" name="phone" value="13800138000" placeholder="请输入联系电话" 
+                                                   autocomplete="off" class="layui-input" lay-verify="phone">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="layui-form-label">既往病史</label>
+                                        <div class="layui-input-block">
+                                            <textarea name="pastIllness" placeholder="请输入既往病史" 
+                                                      class="layui-textarea" rows="3">高血压3年</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="layui-form-label">手术史</label>
+                                        <div class="layui-input-block">
+                                            <textarea name="surgeryHistory" placeholder="请输入手术史，无则填写'无'" 
+                                                      class="layui-textarea" rows="3">2020年行胆囊切除术</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="layui-form-label required">修改原因</label>
+                                        <div class="layui-input-block">
+                                            <textarea name="modifyReason" placeholder="请说明修改依据，如'2024年体检新增糖尿病'" 
+                                                      class="layui-textarea" rows="3" lay-verify="required"></textarea>
+                                            <p class="form-tip"><i class="fa fa-info-circle icon-tip"></i> 请详细说明修改原因及依据，将作为轨迹记录的重要部分</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 提交按钮 -->
+                                <div class="btn-submit">
+                                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="submitUpdate">
+                                        <i class="fa fa-save"></i> 提交修改
+                                    </button>
+                                    <button type="reset" class="layui-btn layui-btn-primary">
+                                        <i class="fa fa-refresh"></i> 重置
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- 右侧修改轨迹面板 -->
+                    <div class="layui-col-md6">
+                        <div class="form-section">
+                            <h3 class="form-section-title">修改轨迹面板</h3>
+                            <div class="track-list" id="trackList">
+                                <!-- 轨迹记录1 -->
+                                <div class="track-item">
+                                    <div class="track-header">
+                                        <span class="track-operator">李医生（全科）</span>
+                                        <span class="track-time">2024-03-15 09:23:45</span>
+                                    </div>
+                                    <div class="track-field">修改字段：既往病史</div>
+                                    <div class="track-content">
+                                        <div><strong>修改前：</strong>无高血压病史</div>
+                                        <div><strong>修改后：</strong>高血压3年</div>
+                                    </div>
+                                    <div class="track-field">修改原因：2024年3月体检发现血压持续偏高，诊断为高血压</div>
+                                </div>
+                                
+                                <!-- 轨迹记录2 -->
+                                <div class="track-item">
+                                    <div class="track-header">
+                                        <span class="track-operator">王护士（慢病科）</span>
+                                        <span class="track-time">2023-11-02 14:56:12</span>
+                                    </div>
+                                    <div class="track-field">修改字段：体重</div>
+                                    <div class="track-content">
+                                        <div><strong>修改前：</strong>75kg</div>
+                                        <div><strong>修改后：</strong>72kg</div>
+                                    </div>
+                                    <div class="track-field">修改原因：常规随访更新体重数据</div>
+                                </div>
+                                
+                                <!-- 轨迹记录3 -->
+                                <div class="track-item">
+                                    <div class="track-header">
+                                        <span class="track-operator">张医生（建档医生）</span>
+                                        <span class="track-time">2023-06-10 10:15:30</span>
+                                    </div>
+                                    <div class="track-field">修改字段：初始建档</div>
+                                    <div class="track-content">
+                                        <div><strong>操作：</strong>居民健康档案创建</div>
+                                    </div>
+                                    <div class="track-field">修改原因：新居民首次建档</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script>
+layui.use(['form', 'layer', 'miniTab'], function() {
+    const form = layui.form;
+    const layer = layui.layer;
+    const $ = layui.jquery;
+    layui.miniTab.listen();
+    
+    // 保存原始数据用于比较修改内容
+    const originalData = {
+        height: 175,
+        weight: 72,
+        bloodType: "AB",
+        phone: "13800138000",
+        pastIllness: "高血压3年",
+        surgeryHistory: "2020年行胆囊切除术"
+    };
+    
+    // 提交修改
+    form.on('submit(submitUpdate)', function(data) {
+        // 获取表单数据
+        const formData = data.field;
+        
+        // 比较修改内容
+        const modifiedFields = [];
+        for (const key in originalData) {
+            if (formData[key] !== undefined && formData[key].toString() !== originalData[key].toString()) {
+                modifiedFields.push({
+                    field: getFieldName(key),
+                    oldValue: originalData[key],
+                    newValue: formData[key]
+                });
+            }
+        }
+        
+        // 如果没有修改内容
+        if (modifiedFields.length === 0) {
+            return layer.msg('未检测到任何修改内容', {icon: 3}), false;
+        }
+        
+        // 模拟提交
+        const loadIdx = layer.load(2, {shade: 0.3});
+        setTimeout(function() {
+            layer.close(loadIdx);
+            
+            // 添加新的修改轨迹
+            addNewTrack(modifiedFields, formData.modifyReason);
+            
+            // 更新原始数据
+            Object.assign(originalData, formData);
+            
+            layer.msg('健康信息修改成功，已记录修改轨迹', {icon: 1, time: 2000});
+        }, 1500);
+        
+        return false;
+    });
+    
+    // 添加新的修改轨迹
+    function addNewTrack(modifiedFields, reason) {
+        // 获取当前时间
+        const now = new Date();
+        const timeStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')} ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+        
+        // 构建轨迹HTML
+        let trackHtml = `
+        <div class="track-item">
+            <div class="track-header">
+                <span class="track-operator">当前操作员（系统管理员）</span>
+                <span class="track-time">${timeStr}</span>
+            </div>`;
+        
+        // 添加所有修改的字段
+        modifiedFields.forEach(field => {
+            trackHtml += `
+            <div class="track-field">修改字段：${field.field}</div>
+            <div class="track-content">
+                <div><strong>修改前：</strong>${field.oldValue}</div>
+                <div><strong>修改后：</strong>${field.newValue}</div>
+            </div>`;
+        });
+        
+        // 添加修改原因
+        trackHtml += `<div class="track-field">修改原因：${reason}</div></div>`;
+        
+        // 添加到轨迹列表最前面
+        $('#trackList').prepend(trackHtml);
+    }
+    
+    // 获取字段显示名称
+    function getFieldName(fieldKey) {
+        const fieldNames = {
+            height: "身高",
+            weight: "体重",
+            bloodType: "血型",
+            phone: "联系电话",
+            pastIllness: "既往病史",
+            surgeryHistory: "手术史"
+        };
+        return fieldNames[fieldKey] || fieldKey;
+    }
+});
+</script>
+</body>
+</html>
+    

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>多条件档案查询与模糊检索</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        .layui-card {border:1px solid #f2f2f2;border-radius:5px;margin-bottom:20px;}
+        .layui-card-header {background-color:#fafafa;border-bottom:1px solid #f2f2f2;}
+        .icon {margin-right:10px;color:#1aa094;}
+        .icon-blue {color:#1e9fff!important;}
+        .form-section {padding:20px;border:1px dashed #e6e6e6;border-radius:5px;margin-bottom:20px;}
+        .form-section-title {font-size:16px;color:#333;margin-bottom:15px;padding-left:10px;border-left:3px solid #1E9FFF;}
+        .form-row {display:flex;margin-bottom:15px;align-items:flex-end;}
+        .form-group {flex:1;margin-right:15px;}
+        .form-group:last-child {margin-right:0;}
+        .form-tip {color:#666;font-size:12px;margin-top:5px;}
+        .query-area {margin-bottom:15px;}
+        .result-table {margin-top:20px;}
+        .required::before {content:"*";color:#ff0000;margin-right:4px;font-weight:bold;}
+        .hidden {display:none;}
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="fa fa-search icon icon-blue"></i>多条件档案查询与模糊检索
+            </div>
+            <div class="layui-card-body">
+                <form class="layui-form" lay-filter="queryForm">
+                    <div class="form-section">
+                        <h3 class="form-section-title">查询条件</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="layui-form-label required">查询方式</label>
+                                <div class="layui-input-block">
+                                    <select name="queryType" id="queryType" lay-verify="required" lay-filter="queryType">
+                                        <option value="">请选择查询方式</option>
+                                        <option value="idCard">身份证号</option>
+                                        <option value="recordNo">档案编号</option>
+                                        <option value="name">姓名</option>
+                                        <option value="fuzzy">模糊查询</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- 精准查询输入框 -->
+                            <div class="form-group" id="precisionQueryGroup">
+                                <label class="layui-form-label required">精准查询</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="precisionQuery" id="precisionQuery" 
+                                           placeholder="请输入查询内容" autocomplete="off" 
+                                           class="layui-input" lay-verify="required">
+                                    <p class="form-tip" id="precisionQueryTip">请输入身份证号进行查询</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 模糊查询条件区域 -->
+                        <div class="query-area" id="fuzzyQueryGroup">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="layui-form-label">年龄段</label>
+                                    <div class="layui-input-block">
+                                        <select name="ageGroup">
+                                            <option value="">请选择年龄段</option>
+                                            <option value="0-6">0-6岁</option>
+                                            <option value="7-17">7-17岁</option>
+                                            <option value="18-44">18-44岁</option>
+                                            <option value="45-59">45-59岁</option>
+                                            <option value="60-74">60-74岁</option>
+                                            <option value="75+">75岁及以上</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="layui-form-label">慢性病类型</label>
+                                    <div class="layui-input-block">
+                                        <select name="chronicDisease">
+                                            <option value="">请选择慢性病类型</option>
+                                            <option value="hypertension">高血压</option>
+                                            <option value="diabetes">糖尿病</option>
+                                            <option value="heartDisease">冠心病</option>
+                                            <option value="stroke">脑卒中</option>
+                                            <option value="kidneyDisease">慢性肾病</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 查询按钮 -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <div class="layui-input-block">
+                                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="doQuery">
+                                        <i class="fa fa-search"></i> 查询
+                                    </button>
+                                    <button type="reset" class="layui-btn layui-btn-primary">
+                                        <i class="fa fa-refresh"></i> 重置
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 查询结果表格 -->
+                    <div class="result-table" id="resultTable" style="display:none;">
+                        <table class="layui-table" lay-size="sm">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>姓名</th>
+                                    <th>年龄</th>
+                                    <th>档案状态</th>
+                                    <th>主要健康问题</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultBody">
+                                <!-- 结果将通过JS动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script>
+layui.use(['form', 'layer', 'miniTab'], function() {
+    const form = layui.form;
+    const layer = layui.layer;
+    const $ = layui.jquery;
+    layui.miniTab.listen();
+    
+    // 模拟查询结果数据
+    const mockResults = {
+        idCard: [
+            {id: 1, name: "张三", age: 45, status: "正常", healthIssue: "高血压"},
+            {id: 2, name: "张三", age: 32, status: "正常", healthIssue: "无"}
+        ],
+        recordNo: [
+            {id: 1, name: "李四", age: 56, status: "正常", healthIssue: "糖尿病"},
+        ],
+        name: [
+            {id: 1, name: "王五", age: 28, status: "正常", healthIssue: "无"},
+            {id: 2, name: "王五", age: 67, status: "待更新", healthIssue: "高血压、冠心病"}
+        ],
+        fuzzy: {
+            "0-6": [
+                {id: 1, name: "赵六", age: 3, status: "正常", healthIssue: "无"}
+            ],
+            "hypertension": [
+                {id: 1, name: "张三", age: 45, status: "正常", healthIssue: "高血压"},
+                {id: 2, name: "王五", age: 67, status: "待更新", healthIssue: "高血压、冠心病"}
+            ],
+            "all": [
+                {id: 1, name: "张三", age: 45, status: "正常", healthIssue: "高血压"},
+                {id: 2, name: "李四", age: 56, status: "正常", healthIssue: "糖尿病"},
+                {id: 3, name: "王五", age: 67, status: "待更新", healthIssue: "高血压、冠心病"},
+                {id: 4, name: "赵六", age: 3, status: "正常", healthIssue: "无"}
+            ]
+        }
+    };
+    
+    // 初始隐藏查询区域
+    $('#precisionQueryGroup').addClass('hidden');
+    $('#fuzzyQueryGroup').addClass('hidden');
+    $('#resultTable').hide();
+    
+    // 监听查询方式变化
+    form.on('select(queryType)', function(data) {
+        const queryType = data.value;
+        
+        // 重置查询区域显示状态
+        $('#precisionQueryGroup').addClass('hidden');
+        $('#fuzzyQueryGroup').addClass('hidden');
+        $('#resultTable').hide();
+        
+        // 根据查询方式显示对应输入区域
+        if (queryType === 'idCard' || queryType === 'recordNo' || queryType === 'name') {
+            $('#precisionQueryGroup').removeClass('hidden');
+            
+            // 更新提示文本
+            let tipText = '';
+            switch(queryType) {
+                case 'idCard': tipText = '请输入18位身份证号进行查询'; break;
+                case 'recordNo': tipText = '请输入档案编号进行查询'; break;
+                case 'name': tipText = '请输入姓名进行查询'; break;
+            }
+            $('#precisionQueryTip').text(tipText);
+            $('#precisionQuery').attr('placeholder', `请输入${queryType === 'idCard' ? '身份证号' : queryType === 'recordNo' ? '档案编号' : '姓名'}`);
+        } 
+        else if (queryType === 'fuzzy') {
+            $('#fuzzyQueryGroup').removeClass('hidden');
+        }
+    });
+    
+    // 执行查询
+    form.on('submit(doQuery)', function(data) {
+        const queryType = data.field.queryType;
+        let results = [];
+        
+        // 根据查询类型获取模拟数据
+        if (queryType === 'idCard' || queryType === 'recordNo' || queryType === 'name') {
+            const queryValue = data.field.precisionQuery;
+            if (!queryValue) {
+                return layer.msg('请输入查询内容', {icon: 2}), false;
+            }
+            results = mockResults[queryType] || [];
+        } 
+        else if (queryType === 'fuzzy') {
+            const ageGroup = data.field.ageGroup;
+            const disease = data.field.chronicDisease;
+            
+            // 如果未选择任何条件，返回全部结果
+            if (!ageGroup && !disease) {
+                results = mockResults.fuzzy.all || [];
+            }
+            // 按年龄段查询
+            else if (ageGroup && !disease) {
+                results = mockResults.fuzzy[ageGroup] || [];
+            }
+            // 按疾病类型查询
+            else if (!ageGroup && disease) {
+                results = mockResults.fuzzy[disease] || [];
+            }
+            // 组合条件查询（简化处理，实际项目需后端支持）
+            else {
+                results = mockResults.fuzzy.all.filter(item => 
+                    item.healthIssue.includes(disease === 'hypertension' ? '高血压' : 
+                                           disease === 'diabetes' ? '糖尿病' : '冠心病')
+                );
+            }
+        }
+        
+        // 显示查询结果
+        if (results.length > 0) {
+            let html = '';
+            results.forEach((item, index) => {
+                html += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item.name}</td>
+                    <td>${item.age}</td>
+                    <td>${item.status}</td>
+                    <td>${item.healthIssue}</td>
+                    <td>
+                        <button class="layui-btn layui-btn-normal layui-btn-xs" title="编辑档案">
+                            <i class="fa fa-edit"></i>
+                        </button>
+                        <button class="layui-btn layui-btn-danger layui-btn-xs" title="删除档案">
+                            <i class="fa fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            });
+            $('#resultBody').html(html);
+            $('#resultTable').show();
+            layer.msg(`查询成功，共找到${results.length}条记录`, {icon: 1});
+        } else {
+            $('#resultTable').hide();
+            layer.msg('未找到匹配的记录', {icon: 2});
+        }
+        
+        return false;
+    });
+});
+</script>
+</body>
+</html>
+    

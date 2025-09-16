@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>档案归档、删除与批量清理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        .layui-card {border:1px solid #f2f2f2;border-radius:5px;margin-bottom:20px;}
+        .layui-card-header {background-color:#fafafa;border-bottom:1px solid #f2f2f2;}
+        .icon {margin-right:10px;color:#1aa094;}
+        .icon-blue {color:#1e9fff!important;}
+        .icon-tip {color:#ff5722!important;}
+        .form-section {padding:20px;border:1px dashed #e6e6e6;border-radius:5px;margin-bottom:20px;}
+        .form-section-title {font-size:16px;color:#333;margin-bottom:15px;padding-left:10px;border-left:3px solid #1E9FFF;}
+        .form-row {display:flex;margin-bottom:15px;align-items:flex-end;}
+        .form-group {flex:1;margin-right:15px;}
+        .form-group:last-child {margin-right:0;}
+        .form-tip {color:#666;font-size:12px;margin-top:5px;}
+        .btn-group {margin-top:20px;}
+        .readonly-input {background-color:#f5f5f5;color:#999;}
+        .report-section {margin-top:20px;padding:15px;background-color:#f9f9f9;border-radius:5px;display:none;}
+        .report-title {font-weight:bold;margin-bottom:10px;color:#1e9fff;}
+        .file-list {max-height:200px;overflow-y:auto;margin-top:10px;padding-left:20px;}
+        .file-list li {margin-bottom:5px;}
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="fa fa-folder-open icon icon-blue"></i>档案归档、删除与批量清理
+            </div>
+            <div class="layui-card-body">
+                <form class="layui-form" lay-filter="fileManagementForm">
+                    <!-- 单档案操作区域 -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">单档案操作</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="layui-form-label required">档案编号</label>
+                                <div class="layui-input-block">
+                                    <input type="text" name="fileNo" placeholder="请输入档案编号" 
+                                           autocomplete="off" class="layui-input" lay-verify="required">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="layui-form-label">操作</label>
+                                <div class="layui-input-block">
+                                    <button type="button" class="layui-btn layui-btn-normal" id="loadFile">
+                                        <i class="fa fa-search"></i> 加载档案
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 档案信息（初始隐藏） -->
+                        <div id="fileInfo" style="display:none;">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="layui-form-label">姓名</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" id="fileName" class="layui-input readonly-input" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="layui-form-label">身份证号</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" id="fileIdCard" class="layui-input readonly-input" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="layui-form-label">档案状态</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" id="fileStatus" class="layui-input readonly-input" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="layui-form-label">最后更新时间</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" id="lastUpdateTime" class="layui-input readonly-input" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button type="button" class="layui-btn layui-btn-normal" id="archiveFile">
+                                    <i class="fa fa-archive"></i> 归档档案
+                                </button>
+                                <button type="button" class="layui-btn layui-btn-danger" id="deleteSingleFile">
+                                    <i class="fa fa-trash"></i> 删除档案
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 批量清理区域 -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">批量清理</h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="layui-form-label required">清理条件</label>
+                                <div class="layui-input-block">
+                                    <select name="cleanCondition" lay-verify="required">
+                                        <option value="">请选择清理条件</option>
+                                        <option value="frozenOver1Year">账号冻结超1年</option>
+                                        <option value="noDataOver2Years">无健康数据超2年</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="layui-form-label required">操作类型</label>
+                                <div class="layui-input-block">
+                                    <select name="operationType" lay-verify="required">
+                                        <option value="">请选择操作类型</option>
+                                        <option value="archive">归档</option>
+                                        <option value="delete">删除</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-tip"><i class="fa fa-info-circle icon-tip"></i> 批量操作将对符合条件的所有档案执行统一处理，请谨慎操作</div>
+                        
+                        <div class="btn-group">
+                            <button class="layui-btn layui-btn-normal" lay-submit lay-filter="batchExecute">
+                                <i class="fa fa-cogs"></i> 批量执行
+                            </button>
+                        </div>
+                        
+                        <!-- 批量操作报告 -->
+                        <div class="report-section" id="batchReport">
+                            <div class="report-title">批量操作报告</div>
+                            <div id="reportContent"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script>
+layui.use(['form', 'layer', 'miniTab'], function() {
+    const form = layui.form;
+    const layer = layui.layer;
+    const $ = layui.jquery;
+    layui.miniTab.listen();
+    
+    // 模拟档案数据
+    const mockFiles = {
+        "FILE2023001": {
+            name: "张三",
+            idCard: "110101199001011234",
+            status: "正常",
+            lastUpdate: "2024-05-10 14:30:22"
+        },
+        "FILE2023002": {
+            name: "李四",
+            idCard: "110102199203045678",
+            status: "冻结",
+            lastUpdate: "2023-01-15 09:20:11"
+        },
+        "FILE2023003": {
+            name: "王五",
+            idCard: "110103198805069012",
+            status: "正常",
+            lastUpdate: "2022-03-20 16:45:33"
+        }
+    };
+    
+    // 加载档案
+    $("#loadFile").click(function() {
+        const fileNo = $("input[name='fileNo']").val().trim();
+        if (!fileNo) {
+            return layer.msg('请输入档案编号', {icon: 2});
+        }
+        
+        const fileData = mockFiles[fileNo];
+        if (fileData) {
+            // 填充档案信息
+            $("#fileName").val(fileData.name);
+            $("#fileIdCard").val(fileData.idCard);
+            $("#fileStatus").val(fileData.status);
+            $("#lastUpdateTime").val(fileData.lastUpdate);
+            $("#fileInfo").show();
+            layer.msg('档案加载成功', {icon: 1});
+        } else {
+            $("#fileInfo").hide();
+            layer.msg('未找到该档案', {icon: 2});
+        }
+    });
+    
+    // 归档档案
+    $("#archiveFile").click(function() {
+        const fileNo = $("input[name='fileNo']").val().trim();
+        if (!fileNo || !$("#fileInfo").is(":visible")) {
+            return layer.msg('请先加载有效的档案', {icon: 2});
+        }
+        
+        if ($("#fileStatus").val() === "已归档") {
+            return layer.msg('该档案已处于归档状态', {icon: 3});
+        }
+        
+        layer.confirm(`确定要将档案【${fileNo} - ${$("#fileName").val()}】归档吗？`, {
+            title: '归档确认',
+            icon: 3,
+            btn: ['确认归档', '取消']
+        }, function(index) {
+            layer.close(index);
+            const loadIdx = layer.load(2, {shade: 0.3});
+            
+            setTimeout(function() {
+                layer.close(loadIdx);
+                $("#fileStatus").val("已归档");
+                layer.msg('档案归档成功', {icon: 1, time: 1500});
+            }, 1200);
+        });
+    });
+    
+    // 删除单份档案
+    $("#deleteSingleFile").click(function() {
+        const fileNo = $("input[name='fileNo']").val().trim();
+        if (!fileNo || !$("#fileInfo").is(":visible")) {
+            return layer.msg('请先加载有效的档案', {icon: 2});
+        }
+        
+        layer.confirm(`确定要删除档案【${fileNo} - ${$("#fileName").val()}】吗？<br>删除后将备份保留30天，逾期将永久删除`, {
+            title: '删除确认',
+            icon: 3,
+            btn: ['确认删除', '取消']
+        }, function(index) {
+            layer.close(index);
+            const loadIdx = layer.load(2, {shade: 0.3});
+            
+            setTimeout(function() {
+                layer.close(loadIdx);
+                $("#fileInfo").hide();
+                $("input[name='fileNo']").val('');
+                layer.msg('档案删除成功，已备份', {icon: 1, time: 1500});
+            }, 1200);
+        });
+    });
+    
+    // 批量执行
+    form.on('submit(batchExecute)', function(data) {
+        const condition = data.field.cleanCondition;
+        const operation = data.field.operationType;
+        
+        // 模拟符合条件的档案
+        let fileList = [];
+        let conditionText = "";
+        
+        if (condition === "frozenOver1Year") {
+            conditionText = "账号冻结超1年";
+            fileList = ["FILE2022045", "FILE2022067", "FILE2022103", "FILE2022156"];
+        } else if (condition === "noDataOver2Years") {
+            conditionText = "无健康数据超2年";
+            fileList = ["FILE2021023", "FILE2021089", "FILE2021156"];
+        }
+        
+        const operationText = operation === "archive" ? "归档" : "删除";
+        
+        layer.confirm(`确定要对【${conditionText}】的${fileList.length}份档案执行【${operationText}】操作吗？`, {
+            title: '批量操作确认',
+            icon: 3,
+            btn: ['确认执行', '取消']
+        }, function(index) {
+            layer.close(index);
+            const loadIdx = layer.load(2, {shade: 0.3});
+            
+            setTimeout(function() {
+                layer.close(loadIdx);
+                
+                // 生成批量操作报告
+                let reportHtml = `
+                <p>操作类型：${operationText}</p>
+                <p>清理条件：${conditionText}</p>
+                <p>处理档案总数：${fileList.length}份</p>
+                <p>操作时间：${new Date().toLocaleString()}</p>
+                <p>涉及档案编号：</p>
+                <ul class="file-list">`;
+                
+                fileList.forEach(fileNo => {
+                    reportHtml += `<li>${fileNo}</li>`;
+                });
+                
+                reportHtml += `</ul>`;
+                
+                $("#reportContent").html(reportHtml);
+                $("#batchReport").show();
+                
+                layer.msg(`批量${operationText}操作完成`, {icon: 1, time: 1500});
+            }, 1800);
+        });
+        
+        return false;
+    });
+});
+</script>
+</body>
+</html>
+    

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>居民个性化接种计划维护</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <style>
+        .container {padding: 20px;}
+        .form-item {margin-bottom: 15px;}
+        .form-label {display: inline-block; width: 120px; text-align: right; margin-right: 10px; vertical-align: middle;}
+        .form-content {display: inline-block; vertical-align: middle;}
+        .required {color: red; margin-right: 5px;}
+        .section-box {margin: 20px 0; padding: 15px; border: 1px solid #eee; border-radius: 4px; background-color: #fafafa;}
+        .section-title {font-size: 16px; font-weight: bold; margin-bottom: 15px; color: #1E9FFF; padding-bottom: 10px; border-bottom: 1px solid #eee;}
+        .tip-text {color: #666; font-size: 13px; margin: 5px 0 15px 130px;}
+        .vaccine-item {padding: 10px; margin-bottom: 10px; background-color: #fff; border-radius: 4px; border-left: 3px solid #1E9FFF;}
+        .btn-group {margin: 20px 0; text-align: center;}
+        .vaccine-info {display: inline-block; width: 200px;}
+        
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-dialog {
+            width: 500px;
+            background-color: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .modal-close {
+            cursor: pointer;
+            font-size: 20px;
+            color: #999;
+        }
+        .modal-body {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>居民个性化接种计划维护</legend>
+        <div class="layui-field-box">
+            <!-- 居民选择 -->
+            <div class="form-item">
+                <label class="form-label"><span class="required">*</span>居民选择</label>
+                <div class="form-content">
+                    <select class="layui-select" id="residentSelect" style="width: 300px;">
+                        <option value="">请选择居民</option>
+                        <option value="1">张三 - 男 - 35岁 - 健康</option>
+                        <option value="2">李四 - 女 - 28岁 - 过敏体质</option>
+                        <option value="3">王五 - 男 - 65岁 - 高血压</option>
+                        <option value="4">赵六 - 女 - 5岁 - 健康</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tip-text">
+                系统将根据居民的年龄、性别和健康状况自动生成个性化接种计划
+            </div>
+
+            <!-- 系统推荐计划区 -->
+            <div class="section-box">
+                <div class="section-title"><i class="layui-icon layui-icon-star"></i> 系统推荐计划区</div>
+                
+                <div id="recommendedVaccines">
+                    <div class="vaccine-item">
+                        <div class="vaccine-info"><strong>流感疫苗</strong></div>
+                        <div class="vaccine-info">推荐接种时间：2025-10-15</div>
+                        <div class="vaccine-info">接种地点：社区卫生服务中心</div>
+                    </div>
+                    
+                    <div class="vaccine-item">
+                        <div class="vaccine-info"><strong>肺炎球菌疫苗</strong></div>
+                        <div class="vaccine-info">推荐接种时间：2025-11-05</div>
+                        <div class="vaccine-info">接种地点：社区卫生服务中心</div>
+                    </div>
+                    
+                    <div class="vaccine-item">
+                        <div class="vaccine-info"><strong>HPV疫苗</strong></div>
+                        <div class="vaccine-info">推荐接种时间：2025-10-20</div>
+                        <div class="vaccine-info">接种地点：区疾控中心</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 手动调整区 -->
+            <div class="section-box">
+                <div class="section-title"><i class="layui-icon layui-icon-edit"></i> 手动调整区</div>
+                
+                <div class="form-item">
+                    <label class="form-label">接种禁忌</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="contraindication" multiple style="width: 300px; height: auto;">
+                            <option value="egg">对鸡蛋过敏</option>
+                            <option value="yeast">对酵母过敏</option>
+                            <option value="neomycin">对新霉素过敏</option>
+                            <option value="pregnancy">妊娠期</option>
+                            <option value="acute">急性疾病发作期</option>
+                            <option value="immunosuppression">免疫抑制</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">替代疫苗</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="alternativeVaccine" style="width: 300px;">
+                            <option value="">无</option>
+                            <option value="1">流感疫苗（鼻内喷雾型）</option>
+                            <option value="2">肺炎球菌结合疫苗</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">调整后接种时间</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="adjustedDate" style="width: 300px;" placeholder="选择调整后的接种日期">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 新增临时疫苗按钮 -->
+            <div class="form-item">
+                <label class="form-label"></label>
+                <div class="form-content">
+                    <button class="layui-btn layui-btn-normal" id="addTempVaccineBtn"><i class="layui-icon layui-icon-addition"></i> 新增临时疫苗</button>
+                </div>
+            </div>
+
+            <!-- 临时疫苗列表 -->
+            <div class="section-box" id="tempVaccineList" style="display: none;">
+                <div class="section-title"><i class="layui-icon layui-icon-file"></i> 临时接种计划</div>
+                <div id="tempVaccinesContainer"></div>
+            </div>
+
+            <!-- 保存调整按钮 -->
+            <div class="btn-group">
+                <button class="layui-btn" id="saveAdjustBtn"><i class="layui-icon layui-icon-save"></i> 保存调整</button>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<!-- 新增临时疫苗弹窗 -->
+<div class="modal-overlay" id="tempVaccineModal">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <div class="modal-title">新增临时疫苗接种计划</div>
+            <div class="modal-close" id="modalClose">&times;</div>
+        </div>
+        <div class="modal-body">
+            <form class="layui-form" id="tempVaccineForm">
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>疫苗名称</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="tempVaccineName" style="width: 300px;" placeholder="输入疫苗名称">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>接种原因</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="vaccineReason" style="width: 300px;" placeholder="输入接种原因（如应急接种）">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>接种时间</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="tempVaccineDate" style="width: 300px;" placeholder="选择接种日期">
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label"><span class="required">*</span>接种地点</label>
+                    <div class="form-content">
+                        <input type="text" class="layui-input" id="vaccineLocation" style="width: 300px;" placeholder="输入接种地点">
+                    </div>
+                </div>
+                
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button class="layui-btn" id="saveTempVaccineBtn">保存</button>
+                    <button type="button" class="layui-btn layui-btn-primary" id="cancelTempVaccineBtn">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    // 不使用jQuery，采用原生JavaScript实现
+    layui.use(['form', 'laydate', 'layer'], function() {
+        var form = layui.form;
+        var laydate = layui.laydate;
+        var layer = layui.layer;
+        
+        // 辅助函数：通过ID获取元素
+        function $(id) {
+            return document.getElementById(id);
+        }
+        
+        // 初始化日期选择器
+        laydate.render({
+            elem: 'adjustedDate',
+            type: 'date'
+        });
+        
+        // 临时疫苗日期选择器
+        laydate.render({
+            elem: 'tempVaccineDate',
+            type: 'date'
+        });
+        
+        // 居民选择变化事件
+        $('residentSelect').addEventListener('change', function() {
+            if (this.value) {
+                layer.msg('已加载居民信息，系统正在生成个性化接种计划', {icon: 1});
+                // 实际应用中这里会根据选择的居民重新加载推荐计划
+            }
+        });
+        
+        // 新增临时疫苗按钮点击事件
+        $('addTempVaccineBtn').addEventListener('click', function() {
+            // 重置表单
+            $('tempVaccineForm').reset();
+            // 显示弹窗
+            $('tempVaccineModal').style.display = 'flex';
+        });
+        
+        // 关闭弹窗
+        $('modalClose').addEventListener('click', function() {
+            $('tempVaccineModal').style.display = 'none';
+        });
+        
+        $('cancelTempVaccineBtn').addEventListener('click', function() {
+            $('tempVaccineModal').style.display = 'none';
+        });
+        
+        // 保存临时疫苗
+        $('saveTempVaccineBtn').addEventListener('click', function() {
+            var vaccineName = $('tempVaccineName').value;
+            var reason = $('vaccineReason').value;
+            var date = $('tempVaccineDate').value;
+            var location = $('vaccineLocation').value;
+            
+            if (!vaccineName || !reason || !date || !location) {
+                layer.msg('请填写完整信息', {icon: 2});
+                return;
+            }
+            
+            // 显示临时疫苗列表区域
+            $('tempVaccineList').style.display = 'block';
+            
+            // 创建临时疫苗项
+            var vaccineItem = document.createElement('div');
+            vaccineItem.className = 'vaccine-item';
+            vaccineItem.innerHTML = `
+                <div class="vaccine-info"><strong>${vaccineName}</strong> <span style="color:#FF5722">(临时)</span></div>
+                <div class="vaccine-info">接种原因：${reason}</div>
+                <div class="vaccine-info">接种时间：${date}</div>
+                <div class="vaccine-info">接种地点：${location}</div>
+            `;
+            
+            // 添加到容器
+            $('tempVaccinesContainer').appendChild(vaccineItem);
+            
+            // 关闭弹窗
+            $('tempVaccineModal').style.display = 'none';
+            
+            layer.msg('临时疫苗接种计划已添加', {icon: 1});
+        });
+        
+        // 保存调整按钮点击事件
+        $('saveAdjustBtn').addEventListener('click', function() {
+            var residentId = $('residentSelect').value;
+            
+            if (!residentId) {
+                layer.msg('请先选择居民', {icon: 2});
+                return;
+            }
+            
+            layer.confirm('确定要保存接种计划调整吗？', function(index) {
+                layer.close(index);
+                layer.msg('正在保存调整...', {icon: 16, time: 1000}, function() {
+                    layer.msg('接种计划调整已保存', {icon: 1});
+                });
+            });
+        });
+        
+        // 初始化表单渲染
+        form.render();
+    });
+</script>
+</body>
+</html>

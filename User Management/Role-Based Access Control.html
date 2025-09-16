@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>角色权限管控模块</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        .layui-card {border:1px solid #f2f2f2;border-radius:5px;margin-bottom:20px;}
+        .layui-card-header {background-color:#fafafa;border-bottom:1px solid #f2f2f2;}
+        .icon {margin-right:10px;color:#1aa094;}
+        .icon-blue {color:#1e9fff!important;}
+        .icon-tip {color:#ff5722!important;}
+        .required::before {content:"*";color:#ff0000;margin-right:4px;font-weight:bold;}
+        .temp-permission {display:none;margin-top:15px;padding-left:110px;}
+        .permission-tip {color:#666;font-size:12px;margin:5px 0 0 110px;line-height:1.5;}
+        .btn-group {margin-top:30px;padding-left:110px;}
+        .btn-group .layui-btn {margin-right:20px;}
+        .form-section {margin-bottom:25px;padding-bottom:15px;border-bottom:1px dashed #f2f2f2;}
+        .form-section-title {font-size:16px;color:#333;margin-bottom:15px;padding-left:10px;border-left:3px solid #1E9FFF;}
+        
+        /* 权限选项样式 - 解决遮挡问题 */
+        .permission-group {margin-top:10px;padding-left:10px;}
+        .permission-item {margin-bottom:12px;position:relative;padding-left:26px;line-height:20px;}
+        .permission-item input[type="checkbox"] {position:absolute;left:0;top:2px;width:18px;height:18px;margin:0;}
+        .permission-item .layui-form-checkbox {position:static!important;margin:0!important;padding:0!important;width:auto!important;}
+        .permission-item .layui-form-checkbox span {padding-left:0!important;margin-left:24px!important;font-size:14px!important;}
+        .permission-item .layui-form-checkbox[lay-skin=primary] i {left:0!important;top:2px!important;margin-right:8px!important;}
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="fa fa-shield icon icon-blue"></i>角色权限管控
+            </div>
+            <div class="layui-card-body">
+                <form class="layui-form" lay-filter="permissionForm">
+                    <!-- 用户选择区域 -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">用户选择</h3>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label required">选择用户</label>
+                            <div class="layui-input-block">
+                                <select id="userSelect" name="userSelect" lay-verify="required" lay-filter="userSelect" style="width:300px;">
+                                    <option value="">请选择用户</option>
+                                    <option value="doctor_li">李医生 - 全科</option>
+                                    <option value="nurse_wang">王护士 - 慢病科</option>
+                                    <option value="doctor_zhang">张医生 - 儿科</option>
+                                    <option value="nurse_chen">陈护士 - 急诊科</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 权限配置区域 -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">权限配置</h3>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label required">可配置权限</label>
+                            <div class="layui-input-block permission-group">
+                                <!-- 权限选项 -->
+                                <div class="permission-item">
+                                    <input type="checkbox" name="permission" value="view_record" title="查看居民档案" lay-skin="primary">
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" name="permission" value="edit_health" title="编辑健康数据" lay-skin="primary">
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" name="permission" value="cross_query" title="跨辖区查询" id="crossQuery" lay-skin="primary">
+                                </div>
+                                <div class="permission-item">
+                                    <input type="checkbox" name="permission" value="export_report" title="报表导出" lay-skin="primary">
+                                </div>
+                                
+                                <!-- 临时权限有效期 -->
+                                <div class="temp-permission" id="tempPermission">
+                                    <div class="layui-form-item">
+                                        <label class="layui-form-label required">临时权限有效期</label>
+                                        <div class="layui-input-block" style="width:300px;">
+                                            <select name="validityDays" lay-verify="required">
+                                                <option value="1">1天</option>
+                                                <option value="2">2天</option>
+                                                <option value="3">3天</option>
+                                                <option value="4">4天</option>
+                                                <option value="5">5天</option>
+                                                <option value="6">6天</option>
+                                                <option value="7">7天</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="permission-tip"><i class="fa fa-exclamation-circle icon-tip"></i> 提示：“跨辖区查询”为临时权限，到期后系统将自动收回</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="btn-group">
+                        <button class="layui-btn layui-btn-normal" lay-submit lay-filter="savePermission">
+                            <i class="fa fa-save"></i> 保存权限
+                        </button>
+                        <button class="layui-btn layui-btn-danger" type="button" id="removePermission">
+                            <i class="fa fa-trash"></i> 移除权限
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script>
+layui.use(['form', 'layer', 'miniTab'], function() {
+    var form = layui.form, layer = layui.layer, $ = layui.jquery;
+    layui.miniTab.listen();
+
+    // 模拟用户权限数据
+    var userPermissionData = {
+        "doctor_li": ["view_record", "edit_health", "export_report"],
+        "nurse_wang": ["view_record", "cross_query"],
+        "doctor_zhang": [],
+        "nurse_chen": ["view_record"]
+    };
+
+    // 加载用户权限
+    form.on('select(userSelect)', function(data) {
+        var userId = data.value, userName = $(this).find("option:selected").text();
+        if (!userId) {
+            $("input[name='permission']").prop("checked", false);
+            form.render('checkbox');
+            $("#tempPermission").hide();
+            return;
+        }
+
+        var perms = userPermissionData[userId] || [];
+        $("input[name='permission']").prop("checked", false);
+        perms.forEach(perm => $("input[name='permission'][value='"+perm+"']").prop("checked", true));
+        form.render('checkbox');
+        $("#tempPermission").toggle(perms.includes("cross_query"));
+
+        layer.msg(perms.length ? 
+            `已加载【${userName}】的权限` : 
+            `【${userName}】暂未配置权限`, 
+            {icon: perms.length ? 1 : 3, time: 1500}
+        );
+    });
+
+    // 跨辖区权限显示有效期
+    form.on('checkbox(permission)', function(data) {
+        if (data.elem.value === "cross_query") {
+            $("#tempPermission").toggle(data.elem.checked);
+        }
+    });
+
+    // 保存权限
+    form.on('submit(savePermission)', function() {
+        var userId = $("#userSelect").val(), userName = $("#userSelect option:selected").text();
+        if (!userId) return layer.msg('请选择用户', {icon: 2}), false;
+
+        var checkedPerms = $("input[name='permission']:checked").map((i, el) => el.value).get();
+        var oldPerms = userPermissionData[userId] || [];
+        
+        if (!oldPerms.length && !checkedPerms.length) {
+            return layer.msg('新增权限需至少勾选一项', {icon: 2}), false;
+        }
+
+        var opType = oldPerms.length ? "修改" : "新增";
+        layer.confirm(`确定为【${userName}】${opType}权限？<br>勾选：${checkedPerms.join('、') || '无'}`, {
+            title: `${opType}权限确认`, icon: 3, btn: ['确认', '取消'], btnAlign: 'c'
+        }, function(index) {
+            layer.close(index);
+            var loadIdx = layer.load(2, {shade: 0.3});
+            
+            setTimeout(() => {
+                userPermissionData[userId] = checkedPerms;
+                layer.close(loadIdx);
+                layer.msg(`【${userName}】权限${opType}成功！`, {icon: 1, time: 1500});
+            }, 1200);
+        });
+        return false;
+    });
+
+    // 移除权限
+    $("#removePermission").click(function() {
+        var userId = $("#userSelect").val(), userName = $("#userSelect option:selected").text();
+        if (!userId) return layer.msg('请选择用户', {icon: 2});
+
+        var toRemove = $("input[name='permission']:checked").map((i, el) => el.value).get();
+        if (!toRemove.length) return layer.msg('请勾选要移除的权限', {icon: 2});
+
+        var oldPerms = userPermissionData[userId] || [];
+        if (!toRemove.some(p => oldPerms.includes(p))) {
+            return layer.msg(`【${userName}】无勾选的权限`, {icon: 2});
+        }
+
+        layer.confirm(`确定移除【${userName}】的权限？<br>待移除：${toRemove.join('、')}`, {
+            title: '移除确认', icon: 3, btn: ['确认', '取消'], btnAlign: 'c'
+        }, function(index) {
+            layer.close(index);
+            var loadIdx = layer.load(2, {shade: 0.3});
+            
+            setTimeout(() => {
+                var remaining = oldPerms.filter(p => !toRemove.includes(p));
+                userPermissionData[userId] = remaining;
+                
+                toRemove.forEach(p => $(`input[name='permission'][value='${p}']`).prop("checked", false));
+                form.render('checkbox');
+                if (toRemove.includes("cross_query")) $("#tempPermission").hide();
+                
+                layer.close(loadIdx);
+                layer.msg(`【${userName}】权限移除成功！剩余：${remaining.join('、') || '无'}`, {icon: 1, time: 2000});
+            }, 1200);
+        });
+    });
+});
+</script>
+</body>
+</html>
+    

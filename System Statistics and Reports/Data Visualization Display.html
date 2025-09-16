@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>健康数据可视化展示</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <script src="https://cdn.staticfile.org/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        .container {
+            padding: 15px;
+            min-height: 100%;
+            box-sizing: border-box;
+        }
+        .form-item {
+            margin: 10px 0;
+            display: inline-block;
+            margin-right: 15px;
+        }
+        .form-label {
+            display: inline-block;
+            width: 100px;
+            text-align: right;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .form-content {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .btn-group {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .filter-group {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            background-color: #f9f9f9;
+        }
+        .filter-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        .chart-container {
+            width: 100%;
+            height: 60vh;
+            min-height: 400px;
+            margin: 20px 0;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        .result-area {
+            display: none;
+            margin-top: 15px;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .action-buttons button {
+            margin: 0 10px;
+        }
+        .section-title {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #1E9FFF;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>健康数据可视化展示</legend>
+        <div class="layui-field-box">
+            <!-- 数据选择条件 -->
+            <div class="form-container">
+                <div class="form-item">
+                    <label class="form-label">数据来源</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="dataSource" style="width: 180px;">
+                            <option value="population">人口结构</option>
+                            <option value="chronic">慢性病</option>
+                            <option value="vaccine">疫苗接种</option>
+                            <option value="examination">体检</option>
+                            <option value="emergency">应急资源</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">图表类型</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="chartType" style="width: 180px;">
+                            <option value="pie">饼图</option>
+                            <option value="bar">柱状图</option>
+                            <option value="line">折线图</option>
+                            <option value="groupedBar">分组柱状图</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="layui-btn" id="generateChartBtn"><i class="layui-icon layui-icon-refresh"></i> 生成图表</button>
+                </div>
+            </div>
+            
+            <!-- 数据筛选条件区域 -->
+            <div class="filter-group">
+                <div class="filter-title">数据筛选条件</div>
+                
+                <div class="form-item">
+                    <label class="form-label">时间范围</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="timeRange" style="width: 180px;">
+                            <option value="year2024">2024年度</option>
+                            <option value="year2023">2023年度</option>
+                            <option value="quarter2024Q1">2024年Q1</option>
+                            <option value="quarter2023Q4">2023年Q4</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">区域</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="region" style="width: 180px;">
+                            <option value="all">全部区域</option>
+                            <option value="east">东片区</option>
+                            <option value="west">西片区</option>
+                            <option value="south">南片区</option>
+                            <option value="north">北片区</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">人群</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="populationGroup" style="width: 180px;">
+                            <option value="all">全部人群</option>
+                            <option value="children">儿童(0-17岁)</option>
+                            <option value="adults">成人(18-59岁)</option>
+                            <option value="elderly">老年人(60岁以上)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图表展示区域 -->
+            <div class="result-area" id="resultArea">
+                <div class="section-title"><i class="layui-icon layui-icon-chart"></i> 数据可视化图表</div>
+                <div class="chart-container" id="visualizationChart"></div>
+                
+                <!-- 操作按钮 -->
+                <div class="action-buttons">
+                    <button class="layui-btn" id="saveChartBtn"><i class="layui-icon layui-icon-save"></i> 保存图表</button>
+                    <button class="layui-btn layui-btn-normal" id="copyChartBtn"><i class="layui-icon layui-icon-copy"></i> 复制图表</button>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    layui.use(['form', 'layer'], function() {
+        var form = layui.form;
+        var layer = layui.layer;
+        var $ = id => document.getElementById(id);
+        
+        // 初始化图表
+        let visualizationChart = null;
+        
+        // 生成图表
+        $('generateChartBtn').addEventListener('click', function() {
+            // 显示结果区域
+            $('resultArea').style.display = 'block';
+            
+            // 初始化或获取图表实例
+            if (!visualizationChart) {
+                visualizationChart = echarts.init($('visualizationChart'));
+            }
+            
+            // 渲染图表
+            renderVisualizationChart();
+            
+            // 触发一次resize确保图表占满容器
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 100);
+            
+            layer.msg('图表已生成', {icon: 1});
+        });
+        
+        // 保存图表
+        $('saveChartBtn').addEventListener('click', function() {
+            if (!visualizationChart) {
+                layer.msg('请先生成图表', {icon: 2});
+                return;
+            }
+            
+            layer.confirm('请选择保存格式', {
+                btn: ['PNG图片', 'SVG矢量图', '取消'],
+                title: '保存图表'
+            }, (index) => {
+                layer.close(index);
+                const type = index === 0 ? 'png' : 'svg';
+                
+                layer.msg(`正在保存${type.toUpperCase()}格式图表...`, {icon: 16, time: 1500}, () => {
+                    // 模拟保存操作
+                    layer.msg(`${type.toUpperCase()}图表保存成功`, {icon: 1});
+                });
+            });
+        });
+        
+        // 复制图表
+        $('copyChartBtn').addEventListener('click', function() {
+            if (!visualizationChart) {
+                layer.msg('请先生成图表', {icon: 2});
+                return;
+            }
+            
+            layer.msg('正在复制图表...', {icon: 16, time: 1000}, () => {
+                // 模拟复制操作
+                layer.msg('图表已复制到剪贴板', {icon: 1});
+            });
+        });
+        
+        // 渲染可视化图表
+        function renderVisualizationChart() {
+            const dataSource = $('dataSource').value;
+            const chartType = $('chartType').value;
+            const timeRange = $('timeRange').value;
+            const region = $('region').value;
+            const populationGroup = $('populationGroup').value;
+            
+            // 获取图表标题
+            const getTitle = () => {
+                const sourceMap = {
+                    'population': '人口结构数据',
+                    'chronic': '慢性病数据',
+                    'vaccine': '疫苗接种数据',
+                    'examination': '体检数据',
+                    'emergency': '应急资源数据'
+                };
+                return `${sourceMap[dataSource]}可视化展示`;
+            };
+            
+            // 获取数据源
+            const {categories, data, series, unit} = getChartData(dataSource, chartType, timeRange, region, populationGroup);
+            
+            // 图表配置
+            const option = {
+                title: {
+                    text: getTitle(),
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: chartType === 'pie' ? 'item' : 'axis',
+                    formatter: function(params) {
+                        if (chartType === 'pie') {
+                            return `${params.name}: ${params.value}${unit} (${params.percent}%)`;
+                        } else if (chartType === 'groupedBar') {
+                            return `${params[0].name}<br/>${params[0].seriesName}: ${params[0].value}${unit}<br/>${params[1].seriesName}: ${params[1].value}${unit}`;
+                        }
+                        return `${params.name}: ${params.value}${unit}`;
+                    }
+                },
+                legend: {
+                    data: series ? series.map(s => s.name) : ['数据值'],
+                    bottom: 10,
+                    show: chartType !== 'pie' || categories.length > 3
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: chartType === 'pie' ? '15%' : '20%',
+                    top: '15%',
+                    containLabel: true
+                },
+                toolbox: {
+                    feature: {
+                        zoom: {show: true},
+                        dataZoom: {show: true},
+                        restore: {show: true}
+                    }
+                },
+                xAxis: chartType !== 'pie' ? {
+                    type: 'category',
+                    data: categories,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: categories.length > 5 ? 30 : 0
+                    }
+                } : undefined,
+                yAxis: chartType !== 'pie' ? {
+                    type: 'value',
+                    name: unit,
+                    min: 0
+                } : undefined,
+                series: series || [{
+                    name: '数据值',
+                    type: chartType === 'groupedBar' ? 'bar' : chartType,
+                    data: data,
+                    symbol: chartType === 'line' ? 'circle' : undefined,
+                    symbolSize: chartType === 'line' ? 8 : undefined,
+                    lineStyle: chartType === 'line' ? {width: 2} : undefined,
+                    itemStyle: {
+                        color: chartType === 'pie' ? undefined : '#1E9FFF'
+                    },
+                    emphasis: {
+                        scale: chartType === 'line' || chartType === 'pie'
+                    }
+                }]
+            };
+            
+            // 特殊配置：分组柱状图
+            if (chartType === 'groupedBar') {
+                option.series = series.map(s => ({
+                    ...s,
+                    type: 'bar',
+                    itemStyle: {
+                        color: s.name.includes('男性') ? '#1E9FFF' : '#36BFFA'
+                    }
+                }));
+            }
+            
+            // 设置图表配置
+            visualizationChart.setOption(option);
+            
+            // 启用拖拽和缩放功能
+            visualizationChart.enableDataZoom();
+        }
+        
+        // 获取图表数据
+        function getChartData(dataSource, chartType, timeRange, region, populationGroup) {
+            // 根据不同数据源返回不同数据
+            switch(dataSource) {
+                case 'population':
+                    if (chartType === 'groupedBar') {
+                        return {
+                            categories: ['0-17岁', '18-34岁', '35-59岁', '60-74岁', '75岁以上'],
+                            unit: '人',
+                            series: [
+                                {name: '男性', data: [652, 1458, 1620, 795, 320]},
+                                {name: '女性', data: [604, 1387, 1508, 772, 362]}
+                            ]
+                        };
+                    } else if (chartType === 'pie') {
+                        return {
+                            categories: ['0-17岁', '18-34岁', '35-59岁', '60-74岁', '75岁以上'],
+                            data: [1256, 2845, 3128, 1567, 682],
+                            unit: '人'
+                        };
+                    } else if (chartType === 'line') {
+                        return {
+                            categories: ['2020', '2021', '2022', '2023', '2024'],
+                            data: [8950, 9120, 9280, 9350, 9478],
+                            unit: '人'
+                        };
+                    }
+                    // 默认柱状图
+                    return {
+                        categories: ['0-17岁', '18-34岁', '35-59岁', '60-74岁', '75岁以上'],
+                        data: [1256, 2845, 3128, 1567, 682],
+                        unit: '人'
+                    };
+                    
+                case 'chronic':
+                    if (chartType === 'groupedBar') {
+                        return {
+                            categories: ['高血压', '糖尿病', '冠心病', '脑卒中', '慢阻肺'],
+                            unit: '%',
+                            series: [
+                                {name: '本社区', data: [8.2, 3.7, 2.1, 1.5, 1.0]},
+                                {name: '国家标准', data: [8.5, 4.0, 2.3, 1.8, 1.2]}
+                            ]
+                        };
+                    } else if (chartType === 'pie') {
+                        return {
+                            categories: ['高血压', '糖尿病', '冠心病', '脑卒中', '慢阻肺'],
+                            data: [8.2, 3.7, 2.1, 1.5, 1.0],
+                            unit: '%'
+                        };
+                    } else if (chartType === 'line') {
+                        return {
+                            categories: ['2020', '2021', '2022', '2023', '2024'],
+                            data: [14.2, 14.8, 15.3, 15.7, 16.1],
+                            unit: '%'
+                        };
+                    }
+                    // 默认柱状图
+                    return {
+                        categories: ['高血压', '糖尿病', '冠心病', '脑卒中', '慢阻肺'],
+                        data: [8.2, 3.7, 2.1, 1.5, 1.0],
+                        unit: '%'
+                    };
+                    
+                case 'vaccine':
+                    if (chartType === 'groupedBar') {
+                        return {
+                            categories: ['乙肝', '麻疹', '脊灰', '百白破', '流感'],
+                            unit: '%',
+                            series: [
+                                {name: '2023年', data: [94.8, 93.5, 93.9, 92.5, 80.2]},
+                                {name: '2024年', data: [95.2, 93.7, 94.1, 92.9, 82.5]}
+                            ]
+                        };
+                    } else if (chartType === 'pie') {
+                        return {
+                            categories: ['乙肝', '麻疹', '脊灰', '百白破', '流感'],
+                            data: [95.2, 93.7, 94.1, 92.9, 82.5],
+                            unit: '%'
+                        };
+                    } else if (chartType === 'line') {
+                        return {
+                            categories: ['2020', '2021', '2022', '2023', '2024'],
+                            data: [88.5, 89.2, 90.1, 91.3, 92.0],
+                            unit: '%'
+                        };
+                    }
+                    // 默认柱状图
+                    return {
+                        categories: ['乙肝', '麻疹', '脊灰', '百白破', '流感'],
+                        data: [95.2, 93.7, 94.1, 92.9, 82.5],
+                        unit: '%'
+                    };
+                    
+                case 'examination':
+                    if (chartType === 'groupedBar') {
+                        return {
+                            categories: ['血压', '血糖', '血脂', '肝功能', '肾功能'],
+                            unit: '%',
+                            series: [
+                                {name: '男性异常率', data: [24.5, 16.8, 30.2, 5.8, 3.5]},
+                                {name: '女性异常率', data: [20.1, 14.4, 27.2, 4.6, 2.7]}
+                            ]
+                        };
+                    } else if (chartType === 'pie') {
+                        return {
+                            categories: ['血压异常', '血糖异常', '血脂异常', '肝功能异常', '肾功能异常'],
+                            data: [22.3, 15.6, 28.7, 5.2, 3.1],
+                            unit: '%'
+                        };
+                    } else if (chartType === 'line') {
+                        return {
+                            categories: ['2020', '2021', '2022', '2023', '2024'],
+                            data: [33.2, 34.5, 35.8, 36.2, 37.1],
+                            unit: '%'
+                        };
+                    }
+                    // 默认柱状图
+                    return {
+                        categories: ['血压异常', '血糖异常', '血脂异常', '肝功能异常', '肾功能异常'],
+                        data: [22.3, 15.6, 28.7, 5.2, 3.1],
+                        unit: '%'
+                    };
+                    
+                case 'emergency':
+                    if (chartType === 'groupedBar') {
+                        return {
+                            categories: ['东片区', '西片区', '南片区', '北片区'],
+                            unit: '个',
+                            series: [
+                                {name: '急救站', data: [3, 4, 2, 3]},
+                                {name: 'AED设备', data: [8, 10, 6, 7]}
+                            ]
+                        };
+                    } else if (chartType === 'pie') {
+                        return {
+                            categories: ['急救站', 'AED设备', '救护车', '应急物资点', '医护人员'],
+                            data: [12, 31, 5, 24, 86],
+                            unit: '个/台/人'
+                        };
+                    } else if (chartType === 'line') {
+                        return {
+                            categories: ['2020', '2021', '2022', '2023', '2024'],
+                            data: [45, 52, 63, 78, 91],
+                            unit: '总资源数'
+                        };
+                    }
+                    // 默认柱状图
+                    return {
+                        categories: ['急救站', 'AED设备', '救护车', '应急物资点', '医护人员'],
+                        data: [12, 31, 5, 24, 86],
+                        unit: '个/台/人'
+                    };
+            }
+        }
+        
+        // 窗口大小调整时重新计算图表尺寸
+        window.addEventListener('resize', () => {
+            if (visualizationChart) {
+                visualizationChart.resize();
+            }
+        });
+        
+        form.render();
+    });
+</script>
+</body>
+</html>

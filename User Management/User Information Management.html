@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>用户信息维护与账号状态管理</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../lib/layui-v2.6.3/css/layui.css" media="all">
+    <link rel="stylesheet" href="../lib/font-awesome-4.7.0/css/font-awesome.min.css" media="all">
+    <link rel="stylesheet" href="../css/public.css" media="all">
+    <style>
+        .layui-card {border:1px solid #f2f2f2;border-radius:5px;margin-bottom:20px;}
+        .layui-card-header {background-color:#fafafa;border-bottom:1px solid #f2f2f2;}
+        .icon {margin-right:10px;color:#1aa094;}
+        .icon-blue {color:#1e9fff!important;}
+        .icon-tip {color:#ff5722!important;}
+        .required::before {content:"*";color:#ff0000;margin-right:4px;font-weight:bold;}
+        .query-section {padding:20px;background-color:#f9f9f9;border-radius:5px;}
+        .info-section {display:none;padding:20px;border:1px dashed #e6e6e6;border-radius:5px;margin-top:15px;}
+        .form-row {display:flex;margin-bottom:15px;}
+        .form-group {flex:1;margin-right:15px;}
+        .form-group:last-child {margin-right:0;}
+        .form-tip {color:#666;font-size:12px;margin-top:5px;}
+        .btn-group {margin-top:20px;}
+        .btn-group .layui-btn {margin-right:15px;}
+        .readonly-input {background-color:#f5f5f5;color:#999;}
+        .status-tip {display:inline-block;margin-left:10px;color:#666;font-size:12px;}
+    </style>
+</head>
+<body>
+<div class="layuimini-container">
+    <div class="layuimini-main">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="fa fa-user-circle icon icon-blue"></i>用户信息维护与账号状态管理
+            </div>
+            <div class="layui-card-body">
+                <form class="layui-form" lay-filter="userForm">
+                    <div class="layui-row">
+                        <!-- 左侧查询区域 -->
+                        <div class="layui-col-md4">
+                            <div class="query-section">
+                                <h3 class="form-section-title">用户查询</h3>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label required">查询内容</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="queryContent" id="queryContent" 
+                                               placeholder="请输入姓名或账号" autocomplete="off" 
+                                               class="layui-input" lay-verify="required">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block">
+                                        <button class="layui-btn layui-btn-normal" type="button" id="queryBtn">
+                                            <i class="fa fa-search"></i> 查询
+                                        </button>
+                                        <button class="layui-btn layui-btn-primary" type="button" id="resetBtn">
+                                            <i class="fa fa-refresh"></i> 重置
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 右侧信息区域 -->
+                        <div class="layui-col-md8">
+                            <div class="info-section" id="userInfoSection">
+                                <h3 class="form-section-title">用户信息区</h3>
+                                
+                                <!-- 可编辑区域 -->
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="layui-form-label required">姓名</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" name="userName" id="userName" 
+                                                   placeholder="请输入姓名" autocomplete="off" 
+                                                   class="layui-input" lay-verify="required">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="layui-form-label required">联系方式</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" name="userPhone" id="userPhone" 
+                                                   placeholder="请输入联系方式" autocomplete="off" 
+                                                   class="layui-input" lay-verify="required|phone">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="layui-form-label required">所属社区</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" name="userCommunity" id="userCommunity" 
+                                                   placeholder="请输入所属社区" autocomplete="off" 
+                                                   class="layui-input" lay-verify="required">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="layui-form-label required">身份证号</label>
+                                        <div class="layui-input-block">
+                                            <input type="text" name="userIdCard" id="userIdCard" 
+                                                   placeholder="身份证号" autocomplete="off" 
+                                                   class="layui-input readonly-input" readonly>
+                                            <p class="form-tip">身份证号不可修改</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 账号状态 -->
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label required">账号状态</label>
+                                    <div class="layui-input-block">
+                                        <select name="userStatus" id="userStatus" lay-verify="required" lay-filter="userStatus">
+                                            <option value="normal">正常</option>
+                                            <option value="disabled">禁用</option>
+                                            <option value="frozen">冻结</option>
+                                        </select>
+                                        <p class="form-tip" id="statusTip">
+                                            正常：账号可正常使用
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <!-- 操作按钮 -->
+                                <div class="btn-group">
+                                    <button class="layui-btn layui-btn-normal" lay-submit lay-filter="saveUser">
+                                        <i class="fa fa-save"></i> 保存修改
+                                    </button>
+                                    <button class="layui-btn layui-btn-danger" type="button" id="deleteUser">
+                                        <i class="fa fa-trash"></i> 注销账号
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../lib/layui-v2.6.3/layui.js" charset="utf-8"></script>
+<script src="../js/lay-config.js?v=1.0.4" charset="utf-8"></script>
+<script>
+layui.use(['form', 'layer', 'miniTab'], function() {
+    var form = layui.form, layer = layui.layer, $ = layui.jquery;
+    layui.miniTab.listen();
+    
+    // 模拟用户数据
+    var mockUserData = {
+        "张三": {
+            name: "张三",
+            phone: "13800138000",
+            community: "幸福社区",
+            idCard: "110101199001011234",
+            status: "normal"
+        },
+        "李四": {
+            name: "李四",
+            phone: "13900139000",
+            community: "阳光社区",
+            idCard: "110102199203045678",
+            status: "disabled"
+        },
+        "王五": {
+            name: "王五",
+            phone: "13700137000",
+            community: "和平社区",
+            idCard: "110103198805069012",
+            status: "frozen"
+        },
+        "zhangsan": {
+            name: "张三",
+            phone: "13800138000",
+            community: "幸福社区",
+            idCard: "110101199001011234",
+            status: "normal"
+        }
+    };
+    
+    // 状态提示文本
+    var statusTips = {
+        normal: "正常：账号可正常使用",
+        disabled: "禁用：针对离职医护人员，账号无法登录",
+        frozen: "冻结：针对迁出居民，账号暂时无法使用"
+    };
+    
+    // 查询用户
+    $("#queryBtn").click(function() {
+        var queryContent = $.trim($("#queryContent").val());
+        if (!queryContent) {
+            return layer.msg('请输入查询内容', {icon: 2});
+        }
+        
+        // 模拟查询
+        var userData = mockUserData[queryContent];
+        if (userData) {
+            // 填充表单
+            $("#userName").val(userData.name);
+            $("#userPhone").val(userData.phone);
+            $("#userCommunity").val(userData.community);
+            $("#userIdCard").val(userData.idCard);
+            $("#userStatus").val(userData.status);
+            
+            // 更新状态提示
+            $("#statusTip").text(statusTips[userData.status]);
+            
+            form.render('select');
+            $("#userInfoSection").show();
+            layer.msg('查询成功', {icon: 1});
+        } else {
+            $("#userInfoSection").hide();
+            layer.msg('未找到该用户信息', {icon: 2});
+        }
+    });
+    
+    // 重置查询
+    $("#resetBtn").click(function() {
+        $("#queryContent").val('');
+        $("#userInfoSection").hide();
+    });
+    
+    // 监听状态变化，更新提示
+    form.on('select(userStatus)', function(data) {
+        $("#statusTip").text(statusTips[data.value]);
+    });
+    
+    // 保存修改
+    form.on('submit(saveUser)', function() {
+        // 获取表单数据
+        var userData = {
+            name: $("#userName").val(),
+            phone: $("#userPhone").val(),
+            community: $("#userCommunity").val(),
+            idCard: $("#userIdCard").val(),
+            status: $("#userStatus").val()
+        };
+        
+        // 模拟保存
+        var loadIdx = layer.load(2, {shade: 0.3});
+        setTimeout(function() {
+            layer.close(loadIdx);
+            // 更新模拟数据
+            mockUserData[userData.name] = userData;
+            mockUserData[userData.idCard] = userData;
+            
+            layer.msg('用户信息修改成功', {icon: 1, time: 1500});
+        }, 1000);
+        
+        return false;
+    });
+    
+    // 注销账号
+    $("#deleteUser").click(function() {
+        var userName = $("#userName").val();
+        if (!userName) {
+            return layer.msg('请先查询用户', {icon: 2});
+        }
+        
+        layer.confirm(`确定要注销【${userName}】的账号吗？<br>注销后账号将无法恢复使用`, {
+            title: '注销账号确认',
+            icon: 3,
+            btn: ['确认注销', '取消'],
+            btnAlign: 'c'
+        }, function(index) {
+            layer.close(index);
+            var loadIdx = layer.load(2, {shade: 0.3});
+            
+            // 模拟删除
+            setTimeout(function() {
+                // 从模拟数据中移除
+                delete mockUserData[userName];
+                delete mockUserData[$("#userIdCard").val()];
+                
+                layer.close(loadIdx);
+                $("#queryContent").val('');
+                $("#userInfoSection").hide();
+                layer.msg('账号注销成功', {icon: 1, time: 1500});
+            }, 1200);
+        });
+    });
+});
+</script>
+</body>
+</html>
+    

@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>健康指标趋势分析</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.6.3/css/layui.css">
+    <script src="https://cdn.staticfile.org/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            height: 100%;
+            overflow-x: hidden;
+        }
+        .container {
+            padding: 15px;
+            min-height: 100%;
+            box-sizing: border-box;
+        }
+        .form-item {
+            margin: 10px 0;
+            display: inline-block;
+            margin-right: 15px;
+        }
+        .form-label {
+            display: inline-block;
+            width: 100px;
+            text-align: right;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .form-content {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .btn-group {
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .section {
+            margin: 15px 0;
+            padding: 12px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #fafafa;
+        }
+        .section-title {
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: #1E9FFF;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .chart-container {
+            width: 100%;
+            height: 60vh;
+            min-height: 400px;
+            margin: 15px 0;
+        }
+        .result-area {
+            display: none;
+            margin-top: 12px;
+        }
+        .detail-table {
+            display: none;
+            margin-top: 15px;
+        }
+        .layui-table {
+            width: 100%;
+            margin: 10px 0;
+        }
+        .btn-center {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <fieldset class="layui-elem-field">
+        <legend>慢性病/疫苗接种/体检异常率趋势分析</legend>
+        <div class="layui-field-box">
+            <!-- 分析条件 -->
+            <div class="form-container">
+                <div class="form-item">
+                    <label class="form-label">指标类型</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="indicatorType" style="width: 180px;">
+                            <option value="chronic">慢性病患病率</option>
+                            <option value="vaccine">疫苗接种率</option>
+                            <option value="abnormal">体检异常率</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">统计周期</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="statisticPeriod" style="width: 180px;">
+                            <option value="year">年度</option>
+                            <option value="quarter">季度</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-item">
+                    <label class="form-label">对比标准</label>
+                    <div class="form-content">
+                        <select class="layui-select" id="comparisonStandard" style="width: 180px;">
+                            <option value="national">国家标准</option>
+                            <option value="local">地方标准</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="layui-btn" id="generateTrendBtn"><i class="layui-icon layui-icon-refresh"></i> 生成趋势图</button>
+                </div>
+            </div>
+            
+            <!-- 分析结果区域 -->
+            <div class="result-area" id="resultArea">
+                <!-- 趋势折线图 -->
+                <div class="section">
+                    <div class="section-title"><i class="layui-icon layui-icon-line-chart"></i> 趋势折线图</div>
+                    <div class="chart-container" id="trendChart"></div>
+                </div>
+                
+                <!-- 查看细分报表按钮 -->
+                <div class="btn-center">
+                    <button class="layui-btn layui-btn-normal" id="viewDetailBtn"><i class="layui-icon layui-icon-list"></i> 查看细分报表</button>
+                </div>
+                
+                <!-- 细分报表区域 -->
+                <div class="detail-table" id="detailTable">
+                    <div class="section">
+                        <div class="section-title" id="detailTitle"><i class="layui-icon layui-icon-table"></i> 慢性病患病率细分数据</div>
+                        
+                        <table class="layui-table" lay-size="sm">
+                            <thead>
+                                <tr>
+                                    <th>病种/疫苗类型/体检指标</th>
+                                    <th>最新周期数据(%)</th>
+                                    <th>上一周期数据(%)</th>
+                                    <th>同比变化(%)</th>
+                                    <th>标准值(%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailTableBody">
+                                <!-- 数据将通过JavaScript动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+<script src="https://cdn.staticfile.org/layui/2.6.3/layui.js"></script>
+<script>
+    layui.use(['form', 'layer'], function() {
+        var form = layui.form;
+        var layer = layui.layer;
+        var $ = id => document.getElementById(id);
+        
+        // 初始化图表
+        var trendChart = echarts.init($('trendChart'));
+        
+        // 生成趋势图
+        $('generateTrendBtn').addEventListener('click', function() {
+            $('resultArea').style.display = 'block';
+            $('detailTable').style.display = 'none'; // 隐藏细分报表
+            renderTrendChart();
+            
+            // 触发一次resize确保图表占满容器
+            setTimeout(() => {
+                window.dispatchEvent(new Event('resize'));
+            }, 100);
+            
+            layer.msg('趋势图已生成', {icon: 1});
+        });
+        
+        // 查看细分报表
+        $('viewDetailBtn').addEventListener('click', function() {
+            const indicatorType = $('indicatorType').value;
+            const detailTitle = $('detailTitle');
+            const tableBody = $('detailTableBody');
+            
+            // 更新标题
+            if (indicatorType === 'chronic') {
+                detailTitle.innerHTML = '<i class="layui-icon layui-icon-table"></i> 慢性病患病率细分数据';
+            } else if (indicatorType === 'vaccine') {
+                detailTitle.innerHTML = '<i class="layui-icon layui-icon-table"></i> 疫苗接种率细分数据';
+            } else {
+                detailTitle.innerHTML = '<i class="layui-icon layui-icon-table"></i> 体检异常率细分数据';
+            }
+            
+            // 填充表格数据
+            tableBody.innerHTML = getDetailTableData(indicatorType);
+            
+            // 显示表格
+            $('detailTable').style.display = 'block';
+            
+            // 平滑滚动到表格位置
+            $('detailTable').scrollIntoView({behavior: 'smooth'});
+        });
+        
+        // 渲染趋势图
+        function renderTrendChart() {
+            const indicatorType = $('indicatorType').value;
+            const period = $('statisticPeriod').value;
+            const standard = $('comparisonStandard').value;
+            
+            // 根据选择的指标类型和周期获取对应数据
+            const {xAxisData, seriesData, standardValue, title, unit} = getChartData(indicatorType, period, standard);
+            
+            // 图表配置
+            const option = {
+                title: {
+                    text: title,
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        let param = params[0];
+                        return `${param.name}<br/>${param.seriesName}: ${param.value}${unit}<br/>标准值: ${standardValue}${unit}`;
+                    }
+                },
+                legend: {
+                    data: ['本社区数据', '标准值'],
+                    bottom: 10
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '15%',
+                    top: '15%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: xAxisData,
+                    axisLabel: {
+                        interval: 0,
+                        rotate: period === 'quarter' ? 30 : 0
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: unit,
+                    min: 0,
+                    max: Math.max(...seriesData) * 1.2 > standardValue * 1.2 ? Math.max(...seriesData) * 1.2 : standardValue * 1.2,
+                    axisLabel: {
+                        formatter: '{value}%'
+                    }
+                },
+                series: [
+                    {
+                        name: '本社区数据',
+                        type: 'line',
+                        data: seriesData,
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        lineStyle: {
+                            width: 2
+                        },
+                        itemStyle: {
+                            color: '#1E9FFF'
+                        },
+                        emphasis: {
+                            scale: true
+                        }
+                    },
+                    {
+                        name: '标准值',
+                        type: 'line',
+                        data: seriesData.map(() => standardValue),
+                        symbol: 'none',
+                        lineStyle: {
+                            width: 2,
+                            type: 'dashed',
+                            color: '#FF5722'
+                        },
+                        emphasis: {
+                            disabled: true
+                        }
+                    }
+                ]
+            };
+            
+            // 设置图表配置
+            trendChart.setOption(option);
+        }
+        
+        // 获取图表数据
+        function getChartData(indicatorType, period, standard) {
+            // 基础配置
+            const baseConfig = {
+                chronic: {
+                    title: '慢性病患病率趋势分析',
+                    unit: '%',
+                    nationalStandard: 15.8,
+                    localStandard: 14.5
+                },
+                vaccine: {
+                    title: '疫苗接种率趋势分析',
+                    unit: '%',
+                    nationalStandard: 90.0,
+                    localStandard: 92.0
+                },
+                abnormal: {
+                    title: '体检异常率趋势分析',
+                    unit: '%',
+                    nationalStandard: 35.0,
+                    localStandard: 37.5
+                }
+            };
+            
+            // 年度数据
+            const yearData = {
+                chronic: [14.2, 14.8, 15.3, 15.7, 16.1],
+                vaccine: [88.5, 89.2, 90.1, 91.3, 92.0],
+                abnormal: [33.2, 34.5, 35.8, 36.2, 37.1],
+                xAxis: ['2020年', '2021年', '2022年', '2023年', '2024年']
+            };
+            
+            // 季度数据
+            const quarterData = {
+                chronic: [15.9, 16.0, 16.1, 16.3, 16.2, 16.4, 16.5, 16.7],
+                vaccine: [91.8, 92.1, 92.3, 92.5, 92.7, 92.9, 93.1, 93.3],
+                abnormal: [36.8, 37.0, 37.2, 37.5, 37.3, 37.6, 37.8, 38.0],
+                xAxis: ['2022Q1', '2022Q2', '2022Q3', '2022Q4', '2023Q1', '2023Q2', '2023Q3', '2023Q4']
+            };
+            
+            // 选择数据
+            const data = period === 'year' ? yearData : quarterData;
+            const config = baseConfig[indicatorType];
+            const standardValue = standard === 'national' ? config.nationalStandard : config.localStandard;
+            
+            return {
+                xAxisData: data.xAxis,
+                seriesData: data[indicatorType],
+                standardValue: standardValue,
+                title: config.title,
+                unit: config.unit
+            };
+        }
+        
+        // 获取细分表格数据
+        function getDetailTableData(indicatorType) {
+            // 慢性病数据
+            if (indicatorType === 'chronic') {
+                return `
+                    <tr><td>高血压</td><td>8.2</td><td>7.9</td><td>+0.3</td><td>8.5</td></tr>
+                    <tr><td>糖尿病</td><td>3.7</td><td>3.5</td><td>+0.2</td><td>4.0</td></tr>
+                    <tr><td>冠心病</td><td>2.1</td><td>2.0</td><td>+0.1</td><td>2.3</td></tr>
+                    <tr><td>脑卒中</td><td>1.5</td><td>1.6</td><td>-0.1</td><td>1.8</td></tr>
+                    <tr><td>慢阻肺</td><td>1.0</td><td>0.9</td><td>+0.1</td><td>1.2</td></tr>
+                    <tr><td><strong>合计</strong></td><td><strong>16.5</strong></td><td><strong>15.9</strong></td><td><strong>+0.6</strong></td><td><strong>15.8</strong></td></tr>
+                `;
+            }
+            // 疫苗接种数据
+            else if (indicatorType === 'vaccine') {
+                return `
+                    <tr><td>乙肝疫苗</td><td>95.2</td><td>94.8</td><td>+0.4</td><td>90.0</td></tr>
+                    <tr><td>麻疹疫苗</td><td>93.7</td><td>93.5</td><td>+0.2</td><td>90.0</td></tr>
+                    <tr><td>脊灰疫苗</td><td>94.1</td><td>93.9</td><td>+0.2</td><td>90.0</td></tr>
+                    <tr><td>百白破疫苗</td><td>92.9</td><td>92.5</td><td>+0.4</td><td>90.0</td></tr>
+                    <tr><td>流感疫苗</td><td>82.5</td><td>80.2</td><td>+2.3</td><td>75.0</td></tr>
+                    <tr><td><strong>平均接种率</strong></td><td><strong>93.1</strong></td><td><strong>92.2</strong></td><td><strong>+0.9</strong></td><td><strong>90.0</strong></td></tr>
+                `;
+            }
+            // 体检异常数据
+            else {
+                return `
+                    <tr><td>血压异常</td><td>22.3</td><td>21.8</td><td>+0.5</td><td>25.0</td></tr>
+                    <tr><td>血糖异常</td><td>15.6</td><td>15.2</td><td>+0.4</td><td>18.0</td></tr>
+                    <tr><td>血脂异常</td><td>28.7</td><td>28.1</td><td>+0.6</td><td>30.0</td></tr>
+                    <tr><td>肝功能异常</td><td>5.2</td><td>5.4</td><td>-0.2</td><td>6.0</td></tr>
+                    <tr><td>肾功能异常</td><td>3.1</td><td>3.0</td><td>+0.1</td><td>4.0</td></tr>
+                    <tr><td><strong>总体异常率</strong></td><td><strong>37.8</strong></td><td><strong>37.0</strong></td><td><strong>+0.8</strong></td><td><strong>35.0</strong></td></tr>
+                `;
+            }
+        }
+        
+        // 窗口大小调整时重新计算图表尺寸
+        window.addEventListener('resize', () => {
+            trendChart.resize();
+        });
+        
+        form.render();
+    });
+</script>
+</body>
+</html>
