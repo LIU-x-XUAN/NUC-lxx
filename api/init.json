@@ -1,0 +1,204 @@
+{
+  "homeInfo": {
+    "title": "首页",
+    "href": "page/home.html"
+  },
+  "logoInfo": {
+    "title": "邻康籍",
+    "image": "images/logo.png",
+    "href": ""
+  },
+  "menuInfo": [
+    {
+      "title": "常规管理",
+      "icon": "fa fa-address-book",
+      "href": "",
+      "target": "_self",
+      "child": [
+        {
+          "title": "用户管理",
+          "href": "page/home.html",
+          "icon": "fa fa-users",
+          "target": "_self",
+		  "child": [
+		    {
+		      "title": "角色账号添加",
+		      "href": "User Management/Role Account Addition.html",
+		      "icon": "fa fa-user-plus",
+		      "target": "_self"
+		    }, {
+		      "title": "角色权限管控",
+		      "href": "User Management/Role-Based Access Control.html",
+		      "icon": "fa fa-shield",
+		      "target": "_self"
+		    },{
+		      "title": "用户信息管理",
+		      "href": "User Management/User Information Management.html",
+		      "icon": "fa fa-pencil",
+		      "target": "_self"
+		    }
+		  ]
+        },
+        {
+          "title": "居民档案管理",
+          "href": "page/home.html",
+          "icon": "fa fa-file-text-o",
+          "target": "_self",
+          "child": [
+          {
+            "title": "健康档案建档",
+            "href": "Resident File Management/Health Record Registration.html",
+            "icon": "fa fa-file-o",
+            "target": "_self"
+          }, {
+            "title": "档案多条件查询",
+            "href": "Resident File Management/Multi-Condition Query of Archives .html",
+            "icon": "fa fa-search",
+            "target": "_self"
+          }, {
+            "title": "健康信息更新",
+            "href": "Resident File Management/Health Information Update.html",
+            "icon": "fa fa-history",
+            "target": "_self"
+          }, {
+            "title": "档案归档清理",
+            "href": "Resident File Management/Archives Filing and Clearing.html",
+            "icon": "fa fa-folder",
+            "target": "_self"
+          }
+        ]
+        },
+        {
+          "title": "健康体检管理",
+          "href": "page/home.html",
+          "icon": "fa fa-stethoscope",
+          "target": "_self",
+          "child": [
+            {
+              "title": "体检预约管理",
+              "href": "Health Check-up Management/Medical Examination Appointment Management.html",
+              "icon": "fa fa-calendar",
+              "target": "_self"
+            }, {
+              "title": "体检数据录入",
+              "href": "Health Check-up Management/Medical Examination Data Entry.html",
+              "icon": "fa fa-keyboard-o",
+              "target": "_self"
+            }, {
+              "title": "体检数据对比",
+              "href": "Health Check-up Management/Medical Examination Data Comparison.html",
+              "icon": "fa fa-line-chart",
+              "target": "_self"
+            }
+          ]
+        },
+        {
+          "title": "慢性病管理模块",
+          "href": "page/home.html",
+          "icon": "fa fa-heartbeat",
+          "target": "_self",
+          "child": [
+            {
+              "title": "慢病确诊登记",
+              "href": "Chronic Disease Management/Chronic Disease Management.html",
+              "icon": "fa fa-file-text",
+              "target": "_self"
+            }, {
+              "title": "慢病随访记录",
+              "href": "Chronic Disease Management/Chronic Disease Follow-up Record.html",
+              "icon": "fa fa-calendar-check-o",
+              "target": "_self"
+            }, {
+              "title": "用药清单维护",
+              "href": "Chronic Disease Management/Medication List Maintenance.html",
+              "icon": "fa fa-medkit",
+              "target": "_self"
+            }, {
+              "title": "慢病统计报表",
+              "href": "Chronic Disease Management/Chronic Disease Statistical Report.html",
+              "icon": "fa fa-bar-chart",
+              "target": "_self"
+            }
+          ]
+        },
+        {
+          "title": "疫苗接种管理",
+          "href": "page/home.html",
+          "icon": "fa fa-medkit",
+          "target": "_self",
+          "child": [
+            {
+              "title": "接种计划维护",
+              "href": "Vaccination Management/Vaccination Schedule Maintenance.html",
+              "icon": "fa fa-calendar-o",
+              "target": "_self"
+            }, {
+              "title": "接种信息记录",
+              "href": "Vaccination Management/Vaccination Information Recording.html",
+              "icon": "fa fa-file-excel-o",
+              "target": "_self"
+            }, {
+              "title": "接种率统计追踪",
+              "href": "Vaccination Management/Vaccination Rate Statistics and Tracking.html",
+              "icon": "fa fa-percent",
+              "target": "_self"
+            }
+          ]
+        },
+        {
+          "title": "应急管理",
+          "href": "page/home.html",
+          "icon": "fa fa-exclamation-circle",
+          "target": "_self",
+          "child": [
+            {
+              "title": "紧急联系人管理",
+              "href": "Emergency Management/Emergency Contact Management.html",
+              "icon": "fa fa-phone",
+              "target": "_self"
+            }, {
+              "title": "急救资源查询",
+              "href": "Emergency Management/First-Aid Resource Inquiry.html",
+              "icon": "fa fa-ambulance",
+              "target": "_self"
+            }, {
+              "title": "突发事件记录",
+              "href": "Emergency Management/Emergency Incident Recording.html",
+              "icon": "fa fa-exclamation-triangle",
+              "target": "_self"
+            }, {
+              "title": "应急物资管理",
+              "href": "Emergency Management/Emergency Supplies Management.html",
+              "icon": "fa fa-archive",
+              "target": "_self"
+            }
+          ]
+        },
+        {
+          "title": "系统统计与报表",
+          "href": "page/home.html",
+          "icon": "fa fa-bar-chart",
+          "target": "_self",
+          "child": [
+            {
+              "title": "基础数据统计",
+              "href": "System Statistics and Reports/Basic Data Statistics.html",
+              "icon": "fa fa-pie-chart",
+              "target": "_self"
+            }, {
+              "title": "健康趋势分析",
+              "href": "System Statistics and Reports/Health Trend Analysis.html",
+              "icon": "fa fa-line-chart",
+              "target": "_self"
+            }, {
+              "title": "数据可视化展示",
+              "href": "System Statistics and Reports/Data Visualization Display.html",
+              "icon": "fa fa-area-chart",
+              "target": "_self"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
